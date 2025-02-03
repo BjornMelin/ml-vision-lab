@@ -7,54 +7,125 @@
 [![DVC](https://img.shields.io/badge/dvc-3.30%2B-violet.svg)](https://dvc.org/)
 [![MLflow](https://img.shields.io/badge/mlflow-2.10%2B-yellow.svg)](https://mlflow.org/)
 
-## Quick Links
+## Overview
 
-- [Documentation](docs/README.md)
-- [Demo Interface](ui/streamlit/README.md)
-- [Getting Started](#getting-started)
-- [Results](#results)
+[Brief project description]
+
+## Quick Start
+
+```bash
+# Clone project
+git clone https://github.com/username/project.git
+cd project
+
+# Set up environment
+cp .env.example .env  # Edit with your settings
+poetry install       # or: pip install -r requirements.txt
+
+# Download data
+dvc pull
+
+# Train model
+python scripts/train.py
+```
 
 ## Project Structure
 
 ```
 .
-├── configs/                # Configuration files
-│   ├── model.yaml         # Model architecture
-│   ├── data.yaml          # Data processing
-│   └── train.yaml         # Training parameters
-├── data/                  # Dataset files
-│   ├── raw/               # Original data
-│   └── processed/         # Processed data
-├── src/                   # Source code
-│   ├── data/              # Data processing
-│   ├── models/            # Model implementations
-│   ├── utils/             # Utilities
-│   ├── train.py          # Training script
-│   ├── evaluate.py       # Evaluation script
-│   └── predict.py        # Inference script
-├── ui/                    # User interface code
-│   ├── streamlit/        # Streamlit interface
-│   │   ├── app.py       # Main app
-│   │   ├── pages/       # App pages
-│   │   └── assets/      # UI resources
-│   └── static/          # Shared assets
-├── experiments/          # Experiment tracking
-│   ├── runs/             # MLflow/experiment runs
-│   ├── notebooks/        # Analysis notebooks
-│   └── results/          # Evaluation results
-├── tests/                # Testing suite
-├── docs/                 # Documentation
-├── artifacts/            # Generated files
-├── .dvc/                 # Data version control
-├── pyproject.toml       # Poetry configuration
-└── requirements.txt     # Pip requirements
+├── scripts/          # Execution scripts
+│   ├── train.py     # Training entry point
+│   ├── evaluate.py  # Evaluation script
+│   ├── predict.py   # Inference script
+│   └── utils/       # Script utilities
+├── configs/         # Configuration files
+│   ├── model.yaml   # Model architecture
+│   ├── data.yaml    # Data processing
+│   ├── train.yaml   # Training parameters
+│   └── experiments/ # Experiment configs
+├── data/           # Dataset files (DVC-tracked)
+│   ├── raw/        # Original data
+│   │   ├── train/  # Training data
+│   │   ├── val/    # Validation data
+│   │   └── test/   # Test data
+│   └── processed/  # Processed data
+├── src/            # Source code
+│   ├── data/       # Data processing
+│   │   ├── dataset.py
+│   │   ├── transforms.py
+│   │   └── utils.py
+│   ├── models/     # Model implementations
+│   │   ├── model.py
+│   │   ├── layers.py
+│   │   └── heads/  # Model heads
+│   └── utils/      # Utilities
+│       ├── metrics.py
+│       ├── visualization.py
+│       └── logging.py
+├── notebooks/      # Jupyter notebooks
+│   ├── exploration/# Data exploration
+│   ├── modeling/   # Model prototyping
+│   └── evaluation/ # Model evaluation
+├── ui/             # User interface code
+│   ├── streamlit/  # Streamlit interface
+│   │   ├── app.py  # Main app
+│   │   ├── pages/  # App pages
+│   │   └── assets/ # UI resources
+│   └── static/     # Shared assets
+├── experiments/    # Experiment tracking
+│   ├── runs/       # MLflow/experiment runs
+│   │   ├── baseline/
+│   │   └── improved/
+│   ├── models/     # Trained models (DVC-tracked)
+│   └── results/    # Evaluation results (DVC-tracked)
+├── tests/          # Testing suite
+│   ├── conftest.py # Test configuration
+│   ├── test_data.py
+│   ├── test_models.py
+│   └── test_utils.py
+├── docs/           # Documentation
+│   ├── index.md    # Documentation home
+│   ├── api/        # API documentation
+│   └── guides/     # User guides
+├── artifacts/      # Temporary outputs (not tracked)
+│   ├── predictions/# Model predictions
+│   ├── checkpoints/# Training checkpoints
+│   └── logs/      # Training logs
+├── .dvc/          # DVC configuration
+│   ├── cache/     # DVC cache (auto-managed)
+│   ├── tmp/       # DVC temporary files
+│   └── config     # DVC settings
+├── .dvcignore     # DVC ignore patterns
+├── .env.example   # Environment variables template
+└── .gitignore     # Git ignore patterns
 ```
 
-## Getting Started
+## Development
+
+### Environment Setup
+
+```bash
+# DVC configuration
+dvc init
+dvc remote add -d storage s3://bucket/path
+
+# Configure DVC
+# .dvcignore
+artifacts/          # Ignore temporary outputs
+*.pyc              # Ignore Python cache
+__pycache__/       # Ignore Python cache directories
+.ipynb_checkpoints # Ignore Jupyter checkpoints
+
+# .dvc/config
+[core]
+    remote = storage
+    autostage = true
+[cache]
+    type = "hardlink,symlink"
+    dir = .dvc/cache
+```
 
 ### Dependencies
-
-Using Poetry (recommended):
 
 ```toml
 # pyproject.toml
@@ -72,161 +143,44 @@ pytest = "^7.0.0"
 black = "^23.0.0"
 ```
 
-Using pip:
-
-```bash
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # Linux/MacOS
-.venv\Scripts\activate     # Windows
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### Environment Setup
-
-```bash
-# Copy example environment file
-cp .env.example .env
-
-# Configure environment variables
-MLFLOW_TRACKING_URI=http://localhost:5000
-DVC_REMOTE_URL=s3://your-bucket/path
-DATA_DIR=/path/to/data
-```
-
-## Usage
-
 ### Training
 
-```bash
-# Start training
-python src/train.py
-
-# Custom config
-python src/train.py --config configs/custom_train.yaml
-```
-
-### User Interface
-
-```bash
-# Start Streamlit app
-streamlit run ui/streamlit/app.py
-```
-
-Example Streamlit app:
-
 ```python
-# ui/streamlit/app.py
-import streamlit as st
+# scripts/train.py
 from src.models import Model
-from src.utils.visualization import visualize_results
+from src.data import DataLoader
 
-def main():
-    st.title("ML Vision Demo")
-
-    # File upload
-    image = st.file_uploader("Upload image", type=["jpg", "png"])
-
-    if image:
-        # Process image
-        model = Model.load("artifacts/models/best.pt")
-        results = model.predict(image)
-
-        # Display results
-        st.image(visualize_results(results))
-        st.json({"predictions": results})
+def train():
+    model = Model(config)
+    trainer = Trainer(model)
+    trainer.train()
 
 if __name__ == "__main__":
-    main()
+    train()
 ```
 
-### Model Architecture
-
-```python
-# src/models/model.py
-class CustomModel(nn.Module):
-    """Model architecture description"""
-    def __init__(self, config: dict):
-        super().__init__()
-        self.backbone = build_backbone(config)
-        self.head = build_head(config)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        features = self.backbone(x)
-        return self.head(features)
-```
-
-## Experiments
-
-### Running Experiments
+### Experiment Tracking
 
 ```python
 # experiments/runs/baseline/run.py
-import mlflow
-from src.train import train
-
-def run_experiment():
-    with mlflow.start_run(run_name="baseline"):
-        metrics = train()
-        mlflow.log_metrics(metrics)
-
-if __name__ == "__main__":
-    run_experiment()
-```
-
-### Tracking Results
-
-```bash
-# Start MLflow server
-mlflow server --host 0.0.0.0 --port 5000
-
-# View dashboard
-mlflow ui
+with mlflow.start_run():
+    mlflow.log_params(config)
+    train()
+    mlflow.log_metrics(metrics)
 ```
 
 ## Results
 
-### Performance Metrics
+### Performance
 
 | Model    | Accuracy | FPS | Memory |
 | -------- | -------- | --- | ------ |
 | Baseline | 85.5%    | 120 | 2.4 GB |
 | Improved | 89.2%    | 95  | 3.8 GB |
 
-### Testing
-
-```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=src tests/
-```
-
 ## Contributing
 
-1. Setup development environment:
-
-   ```bash
-   # Install dependencies including UI
-   poetry install --with ui,dev
-   # or
-   pip install -r requirements.txt
-   ```
-
-2. Create new experiment:
-
-   ```bash
-   mkdir -p experiments/runs/new_experiment
-   ```
-
-3. Run and document:
-   ```bash
-   # Run experiment
-   python experiments/runs/new_experiment/run.py
-   ```
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for development guidelines.
 
 ## License
 

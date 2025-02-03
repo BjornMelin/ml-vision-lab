@@ -74,37 +74,101 @@ When adding a new ML project, follow this structure:
 
 ```
 projects/your-project/
-├── pyproject.toml          # Poetry configuration
-├── requirements.txt        # Pip requirements
-├── configs/               # Configuration files
-│   ├── model.yaml         # Model hyperparameters
-│   ├── data.yaml          # Data processing settings
-│   └── train.yaml         # Training parameters
-├── data/                 # Dataset files
-│   ├── raw/                 # Original data
-│   └── processed/           # Processed data
-├── src/                 # Source code
-│   ├── data/               # Data processing
-│   ├── models/             # Model implementations
-│   ├── utils/              # Utilities
-│   ├── train.py           # Training script
-│   ├── evaluate.py        # Evaluation script
-│   └── predict.py         # Inference script
-├── ui/                  # User interface code
-│   ├── streamlit/         # Streamlit interface
-│   │   ├── app.py         # Main app
-│   │   └── pages/         # App pages
+├── README.md              # Project documentation
+├── pyproject.toml        # Poetry configuration
+├── requirements.txt      # Pip requirements
+├── scripts/              # Execution scripts
+│   ├── train.py          # Training entry point
+│   ├── evaluate.py       # Evaluation script
+│   ├── predict.py        # Inference script
+│   └── utils/            # Script utilities
+├── configs/              # Configuration files
+│   ├── model.yaml        # Model architecture
+│   ├── data.yaml         # Data processing
+│   ├── train.yaml        # Training parameters
+│   └── experiments/      # Experiment configs
+├── data/                 # Dataset files (DVC-tracked)
+│   ├── raw/              # Original data
+│   │   ├── train/        # Training data
+│   │   ├── val/          # Validation data
+│   │   └── test/         # Test data
+│   └── processed/        # Processed data
+├── src/                  # Source code
+│   ├── data/             # Data processing
+│   │   ├── dataset.py
+│   │   ├── transforms.py
+│   │   └── utils.py
+│   ├── models/           # Model implementations
+│   │   ├── model.py
+│   │   ├── layers.py
+│   │   └── heads/        # Model heads
+│   └── utils/            # Utilities
+│       ├── metrics.py
+│       ├── visualization.py
+│       └── logging.py
+├── notebooks/            # Jupyter notebooks
+│   ├── exploration/      # Data exploration
+│   ├── modeling/         # Model prototyping
+│   └── evaluation/       # Model evaluation
+├── ui/                   # User interface code
+│   ├── streamlit/        # Streamlit interface
+│   │   ├── app.py        # Main app
+│   │   ├── pages/        # App pages
+│   │   └── assets/       # UI resources
 │   └── static/           # Shared assets
-├── tests/               # Testing suite
-├── experiments/         # Experiment tracking
+├── experiments/          # Experiment tracking
 │   ├── runs/             # MLflow/experiment runs
-│   └── results/          # Evaluation results
-├── docs/               # Documentation
-├── artifacts/          # Generated files
-└── .dvc/              # DVC configuration
+│   │   ├── baseline/     # Experiment instance
+│   │   └── improved/     # Another experiment
+│   ├── models/           # Trained models (DVC-tracked)
+│   └── results/          # Evaluation results (DVC-tracked)
+├── tests/                # Testing suite
+│   ├── conftest.py       # Test configuration
+│   ├── test_data.py
+│   ├── test_models.py
+│   └── test_utils.py
+├── docs/                 # Documentation
+│   ├── index.md          # Documentation home
+│   ├── api/              # API documentation
+│   └── guides/           # User guides
+├── artifacts/            # Temporary outputs (not tracked)
+│   ├── predictions/      # Model predictions
+│   ├── checkpoints/      # Training checkpoints
+│   └── logs/            # Training logs
+├── .dvc/                # DVC configuration
+│   ├── cache/           # DVC cache (auto-managed)
+│   ├── tmp/             # DVC temporary files
+│   └── config           # DVC settings
+├── .dvcignore           # DVC ignore patterns
+├── .env.example         # Environment variables template
+└── .gitignore           # Git ignore patterns
 ```
 
 ## ML Development Standards
+
+### Version Control Strategy
+
+1. **Git-Tracked Content**
+
+   - Source code (src/)
+   - Configuration files (configs/)
+   - Documentation (docs/)
+   - Notebooks (notebooks/)
+   - UI code (ui/)
+   - Tests (tests/)
+
+2. **DVC-Tracked Content**
+
+   - Dataset files (data/)
+   - Trained models (experiments/models/)
+   - Important results (experiments/results/)
+   - Large binary files
+
+3. **Untracked Content**
+   - Temporary files (artifacts/predictions/)
+   - Training checkpoints (artifacts/checkpoints/)
+   - Log files (artifacts/logs/)
+   - Local configs (.env)
 
 ### Dependency Management
 

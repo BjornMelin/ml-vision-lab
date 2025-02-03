@@ -22,53 +22,133 @@ project-name/
 ├── README.md          # Project documentation
 ├── pyproject.toml    # Poetry/project metadata
 ├── requirements.txt  # Pip requirements (alternative to Poetry)
+├── scripts/          # Execution scripts
+│   ├── train.py      # Training entry point
+│   ├── evaluate.py   # Evaluation script
+│   ├── predict.py    # Inference script
+│   └── utils/        # Script utilities
 ├── configs/          # Configuration files
 │   ├── model.yaml    # Model architecture
 │   ├── data.yaml     # Data processing
-│   └── train.yaml    # Training parameters
-├── data/             # Dataset files
+│   ├── train.yaml    # Training parameters
+│   └── experiments/  # Experiment configs
+├── data/             # Dataset files (DVC-tracked)
 │   ├── raw/          # Original data
+│   │   ├── train/    # Training data
+│   │   ├── val/      # Validation data
+│   │   └── test/     # Test data
 │   └── processed/    # Processed data
 ├── src/              # Source code
 │   ├── data/         # Data processing
 │   │   ├── dataset.py
-│   │   └── transforms.py
+│   │   ├── transforms.py
+│   │   └── utils.py
 │   ├── models/       # Model implementations
 │   │   ├── model.py
-│   │   └── layers.py
-│   ├── utils/        # Utilities
-│   │   ├── metrics.py
-│   │   └── visualization.py
-│   ├── train.py      # Training script
-│   ├── evaluate.py   # Evaluation script
-│   └── predict.py    # Inference script
+│   │   ├── layers.py
+│   │   └── heads/    # Model heads
+│   └── utils/        # Utilities
+│       ├── metrics.py
+│       ├── visualization.py
+│       └── logging.py
+├── notebooks/        # Jupyter notebooks
+│   ├── exploration/  # Data exploration
+│   ├── modeling/     # Model prototyping
+│   └── evaluation/   # Model evaluation
 ├── ui/               # User interface code
 │   ├── streamlit/    # Streamlit interface
 │   │   ├── app.py    # Main Streamlit app
 │   │   ├── pages/    # App pages
-│   │   └── assets/   # Images, css, etc.
-│   ├── gradio/       # Gradio interface (optional)
+│   │   └── assets/   # UI resources
 │   └── static/       # Shared static files
 ├── experiments/      # Experiment tracking
 │   ├── runs/         # MLflow/experiment runs
-│   ├── notebooks/    # Analysis notebooks
-│   └── results/      # Evaluation results
-│       ├── metrics/  # Performance metrics
-│       └── plots/    # Visualizations
+│   │   ├── baseline/ # Experiment instance
+│   │   └── improved/ # Another experiment
+│   ├── models/       # Trained models (DVC-tracked)
+│   └── results/      # Evaluation results (DVC-tracked)
 ├── tests/            # Testing suite
-│   ├── test_data.py
-│   ├── test_models.py
-│   └── test_utils.py
-├── docs/             # Additional documentation
-│   ├── api.md        # API documentation
-│   └── guides/       # User/dev guides
-├── artifacts/        # Generated files
-│   ├── models/       # Saved models
-│   └── logs/         # Training logs
-├── .dvc/            # Data version control
-├── .env.example     # Example environment variables
+│   ├── conftest.py   # Test configuration
+│   ├── test_data.py  # Data tests
+│   ├── test_models.py # Model tests
+│   └── test_utils.py # Utility tests
+├── docs/             # Documentation
+│   ├── index.md      # Documentation home
+│   ├── api/          # API documentation
+│   └── guides/       # User guides
+├── artifacts/        # Temporary outputs (not tracked)
+│   ├── predictions/  # Model predictions
+│   ├── checkpoints/  # Training checkpoints
+│   └── logs/        # Training logs
+├── .dvc/            # DVC configuration
+│   ├── cache/       # DVC cache (auto-managed)
+│   ├── tmp/         # DVC temporary files
+│   └── config       # DVC settings
+├── .dvcignore       # DVC ignore patterns
+├── .env.example     # Environment variables template
 └── .gitignore       # Git ignore patterns
 ```
+
+### Version Control Strategy
+
+1. **Git-Tracked**
+
+   - Source code (src/)
+   - Notebooks (notebooks/)
+   - Configuration (configs/)
+   - Documentation (docs/)
+   - UI code (ui/)
+   - Tests (tests/)
+   - Small static files
+
+2. **DVC-Tracked**
+   - Data files (data/)
+   - Trained models (experiments/models/)
+   - Important results (experiments/results/)
+   - Large binary files
+   - Dataset versions
+3. **Not Tracked**
+   - Temporary files (artifacts/temp/)
+   - Cache files (artifacts/cache/)
+   - Debug outputs (artifacts/debug/)
+   - Local environment files (.env)
+   - Build artifacts
+
+### DVC Configuration
+
+```bash
+# Initialize DVC
+dvc init
+
+# Add remote storage
+dvc remote add -d storage s3://bucket/path
+
+# Track data and models
+dvc add data/raw
+dvc add experiments/models/
+
+# Configure DVC
+# .dvcignore
+artifacts/          # Ignore temporary outputs
+*.pyc              # Ignore Python cache
+__pycache__/       # Ignore Python cache directories
+.ipynb_checkpoints # Ignore Jupyter checkpoints
+
+# .dvc/config
+[core]
+    remote = storage
+    autostage = true    # Automatically stage DVC changes
+
+[cache]
+    type = "hardlink,symlink"  # Efficient storage
+    dir = .dvc/cache    # Local cache location
+```
+
+Note: DVC manages its own cache in .dvc/cache/. The artifacts/ directory is for temporary outputs that don't need version control:
+
+- predictions/: Model inference outputs
+- checkpoints/: Intermediate training checkpoints
+- logs/: Training and evaluation logs
 
 ### Dependencies Management
 
@@ -101,44 +181,6 @@ project-name/
    gradio>=4.19.0
    ```
 
-### User Interface Integration
-
-1. **Streamlit App**
-
-   ```python
-   # ui/streamlit/app.py
-   import streamlit as st
-   from src.models import Model
-   from src.utils.visualization import visualize_results
-
-   def main():
-       st.title("ML Vision Demo")
-
-       # File upload
-       image = st.file_uploader("Upload image", type=["jpg", "png"])
-
-       if image:
-           # Process image
-           model = Model.load("artifacts/models/best.pt")
-           results = model.predict(image)
-
-           # Display results
-           st.image(visualize_results(results))
-
-   if __name__ == "__main__":
-       main()
-   ```
-
-2. **Running the UI**
-
-   ```bash
-   # Start Streamlit app
-   streamlit run ui/streamlit/app.py
-
-   # Start MLflow UI (separate terminal)
-   mlflow ui
-   ```
-
 ## Project Creation Checklist
 
 ### 🚀 Initial Setup
@@ -150,55 +192,62 @@ project-name/
    mkdir project-name
    cd project-name
 
-   # Initialize Poetry
-   poetry init
-
-   # Generate requirements.txt (alternative)
-   poetry export -f requirements.txt --output requirements.txt
-
-   # Create directories
-   mkdir -p src/{data,models,utils}
-   mkdir -p ui/streamlit/pages
-   mkdir -p experiments/{runs,notebooks,results}
-   mkdir -p tests docs artifacts
-   ```
-
-2. **Version Control**
-
-   ```bash
-   # Initialize Git and DVC
+   # Initialize version control
    git init
    dvc init
 
-   # Configure DVC storage
-   dvc remote add -d storage s3://bucket/path
+   # Create directories
+   mkdir -p src/{data,models,utils}
+   mkdir -p scripts
+   mkdir -p notebooks/{exploration,modeling,evaluation}
+   mkdir -p experiments/{runs,models,results}
+   mkdir -p artifacts/{temp,cache,debug}
+   mkdir -p docs/{api,guides}
+   mkdir -p ui/streamlit/pages
+   mkdir -p tests
    ```
 
-3. **UI Setup**
+2. **Version Control Setup**
+
    ```bash
-   # Add UI dependencies
-   poetry add --group ui streamlit gradio
-   # or
-   pip install streamlit gradio
+   # Configure DVC storage
+   dvc remote add -d storage s3://bucket/path
+
+   # Initial data tracking
+   dvc add data/raw/
+   dvc push
+   ```
+
+3. **Environment Setup**
+
+   ```bash
+   # Copy environment template
+   cp .env.example .env
+
+   # Configure environment
+   edit .env  # Add your configurations
    ```
 
 ### Best Practices
 
-1. **Dependency Management**
+1. **Data and Model Management**
 
-   - Use Poetry for development
-   - Maintain requirements.txt for compatibility
-   - Group UI dependencies separately
+   - Track data with DVC
+   - Version models properly
+   - Document data sources
+   - Keep artifacts temporary
 
-2. **UI Organization**
+2. **Development Workflow**
 
-   - Keep UI code separate from ML logic
-   - Use shared static assets
-   - Modular UI components
+   - Use notebooks for exploration
+   - Keep production code in src/
+   - Track experiments with MLflow
+   - Maintain clean artifacts
 
 3. **Documentation**
-   - Document UI setup and usage
-   - Include screenshots/demos
-   - Provide API documentation
+   - Clear README.md
+   - Detailed docs/
+   - API documentation
+   - Usage examples
 
-Remember: Keep ML and UI code separate but well-integrated. This makes both components easier to maintain and deploy! 💪
+Remember: Keep tracked files clean and temporary outputs in artifacts/! 💪
