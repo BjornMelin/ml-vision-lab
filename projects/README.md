@@ -1,272 +1,204 @@
 # Projects Directory 🚀
 
-> Collection of modular computer vision implementations
+> Collection of modular computer vision implementations following ML/CV best practices
 
 ## 📑 Table of Contents
 
 - [Overview](#overview)
-- [Directory Structure](#directory-structure)
-- [Project Guidelines](#project-guidelines)
-- [Project Types](#project-types)
-- [Integration Guidelines](#integration-guidelines)
+- [Project Organization](#project-organization)
+- [ML Development Standards](#ml-development-standards)
 - [Project Creation Checklist](#project-creation-checklist)
-- [Resources](#resources)
-- [Additional Notes](#additional-notes)
 
 ## Overview
 
-This directory contains individual computer vision projects, each focusing on specific vision tasks or applications.
+This directory contains individual computer vision projects, each following industry-standard ML project organization and best practices for reproducibility, maintainability, and production deployment.
 
-## Directory Structure
+## Project Organization
 
-```mermaid
-graph TD
-    A[project-name] --> B[app]
-    A --> C[engine]
-    A --> D[models]
-    A --> E[tests]
-    B --> F[api]
-    B --> G[ui]
-    C --> H[models]
-    C --> I[processing]
-    C --> J[evaluation]
-```
+### Standard Project Structure
 
 ```
-projects/
-├── project-name/           # Individual project directory
-│   ├── app/               # Application interface
-│   │   ├── api/          # API endpoints
-│   │   └── ui/           # User interface
-│   ├── engine/           # Core project logic
-│   │   ├── models/       # Model implementations
-│   │   ├── processing/   # Data processing
-│   │   └── evaluation/   # Evaluation tools
-│   ├── models/           # Trained model weights
-│   ├── tests/            # Unit and integration tests
-│   ├── README.md         # Project documentation
-│   └── requirements.txt  # Project dependencies
-└── README.md             # Projects directory documentation
+project-name/
+├── README.md          # Project documentation
+├── pyproject.toml    # Poetry/project metadata
+├── requirements.txt  # Pip requirements (alternative to Poetry)
+├── configs/          # Configuration files
+│   ├── model.yaml    # Model architecture
+│   ├── data.yaml     # Data processing
+│   └── train.yaml    # Training parameters
+├── data/             # Dataset files
+│   ├── raw/          # Original data
+│   └── processed/    # Processed data
+├── src/              # Source code
+│   ├── data/         # Data processing
+│   │   ├── dataset.py
+│   │   └── transforms.py
+│   ├── models/       # Model implementations
+│   │   ├── model.py
+│   │   └── layers.py
+│   ├── utils/        # Utilities
+│   │   ├── metrics.py
+│   │   └── visualization.py
+│   ├── train.py      # Training script
+│   ├── evaluate.py   # Evaluation script
+│   └── predict.py    # Inference script
+├── ui/               # User interface code
+│   ├── streamlit/    # Streamlit interface
+│   │   ├── app.py    # Main Streamlit app
+│   │   ├── pages/    # App pages
+│   │   └── assets/   # Images, css, etc.
+│   ├── gradio/       # Gradio interface (optional)
+│   └── static/       # Shared static files
+├── experiments/      # Experiment tracking
+│   ├── runs/         # MLflow/experiment runs
+│   ├── notebooks/    # Analysis notebooks
+│   └── results/      # Evaluation results
+│       ├── metrics/  # Performance metrics
+│       └── plots/    # Visualizations
+├── tests/            # Testing suite
+│   ├── test_data.py
+│   ├── test_models.py
+│   └── test_utils.py
+├── docs/             # Additional documentation
+│   ├── api.md        # API documentation
+│   └── guides/       # User/dev guides
+├── artifacts/        # Generated files
+│   ├── models/       # Saved models
+│   └── logs/         # Training logs
+├── .dvc/            # Data version control
+├── .env.example     # Example environment variables
+└── .gitignore       # Git ignore patterns
 ```
 
-## 📋 Project Guidelines
+### Dependencies Management
 
-### Project Structure
+1. **Using Poetry (Recommended)**
 
-```mermaid
-mindmap
-  root((Project Structure))
-    app
-      API Endpoints
-      User Interface
-      CLI Tools
-      GUI Apps
-    engine
-      Model Architecture
-      Data Processing
-      Business Logic
-    models
-      Trained Weights
-      Configurations
-      Checkpoints
-    tests
-      Unit Tests
-      Integration Tests
-      Benchmarks
-```
+   ```toml
+   # pyproject.toml
+   [tool.poetry]
+   name = "project-name"
+   version = "0.1.0"
 
-### 📝 Project Requirements
+   [tool.poetry.dependencies]
+   python = "^3.11"
+   torch = "^2.3.0"
 
-Each project must include:
+   [tool.poetry.group.ui.dependencies]
+   streamlit = "^1.32.0"
+   gradio = "^4.19.0"
+   ```
 
-```mermaid
-graph LR
-    A[README.md] --> B[Documentation]
-    C[requirements.txt] --> D[Dependencies]
-    E[Tests] --> F[Coverage]
-    G[Code] --> H[Standards]
-    style A fill:#f9f,stroke:#333
-    style C fill:#fdd,stroke:#333
-    style E fill:#ddf,stroke:#333
-    style G fill:#dfd,stroke:#333
-```
+2. **Using Pip (Alternative)**
 
-1. 📘 Clear README.md with:
+   ```txt
+   # requirements.txt
+   torch>=2.3.0
+   opencv-python-headless>=5.0.0
 
-   - Project overview
-   - Installation steps
-   - Usage examples
-   - API documentation
-   - Performance metrics
+   # UI dependencies
+   streamlit>=1.32.0
+   gradio>=4.19.0
+   ```
 
-2. 📦 requirements.txt listing:
+### User Interface Integration
 
-   - Core dependencies
-   - Version constraints
-   - Optional packages
-   - Development tools
+1. **Streamlit App**
 
-3. 📚 Proper documentation:
+   ```python
+   # ui/streamlit/app.py
+   import streamlit as st
+   from src.models import Model
+   from src.utils.visualization import visualize_results
 
-   - Code comments
-   - API documentation
-   - Usage guides
-   - Architecture docs
+   def main():
+       st.title("ML Vision Demo")
 
-4. 🧪 Comprehensive tests:
-   - ≥80% code coverage
-   - Performance benchmarks
-   - Integration tests
-   - Edge cases
+       # File upload
+       image = st.file_uploader("Upload image", type=["jpg", "png"])
 
-## 🎯 Project Types
+       if image:
+           # Process image
+           model = Model.load("artifacts/models/best.pt")
+           results = model.predict(image)
 
-### Vision Tasks Matrix
+           # Display results
+           st.image(visualize_results(results))
 
-```mermaid
-graph TD
-    A[Vision Tasks] --> B[Classification]
-    A --> C[Detection]
-    A --> D[Segmentation]
-    A --> E[Tracking]
-    A --> F[Pose]
-    A --> G[SLAM]
-    A --> H[OCR]
-    style A fill:#f9f,stroke:#333
-```
+   if __name__ == "__main__":
+       main()
+   ```
 
-### 🏭 Domain Applications
+2. **Running the UI**
 
-- 🏥 Medical Imaging
-- 🏭 Industrial Inspection
-- 🚗 Autonomous Systems
-- 🎥 Security & Surveillance
-- 🛒 Retail Analytics
-- 🌾 Agriculture
-- 🛰️ Satellite Imaging
+   ```bash
+   # Start Streamlit app
+   streamlit run ui/streamlit/app.py
 
-## 🔄 Integration Guidelines
+   # Start MLflow UI (separate terminal)
+   mlflow ui
+   ```
 
-### Using Core Components
+## Project Creation Checklist
 
-```mermaid
-sequenceDiagram
-    participant Project
-    participant Core
-    participant Utils
-    Project->>Core: Import Components
-    Core->>Utils: Use Utilities
-    Utils->>Project: Return Results
-```
+### 🚀 Initial Setup
 
-```python
-# Import core utilities
-from core.utils.visualization import draw_boxes
-from core.models.base import BaseDetector
-from core.pipelines.preprocessing import ImagePreprocessor
+1. **Project Structure**
 
-# Project implementation
-class CustomDetector(BaseDetector):
-    def __init__(self):
-        self.preprocessor = ImagePreprocessor()
+   ```bash
+   # Create project
+   mkdir project-name
+   cd project-name
 
-    def predict(self, image):
-        # Implementation
-        pass
-```
+   # Initialize Poetry
+   poetry init
 
-### ✨ Best Practices
+   # Generate requirements.txt (alternative)
+   poetry export -f requirements.txt --output requirements.txt
 
-1. **🏗️ Code Organization**
+   # Create directories
+   mkdir -p src/{data,models,utils}
+   mkdir -p ui/streamlit/pages
+   mkdir -p experiments/{runs,notebooks,results}
+   mkdir -p tests docs artifacts
+   ```
 
-   - Modular structure
-   - Clear interfaces
-   - Proper documentation
-   - Efficient imports
+2. **Version Control**
 
-2. **📦 Dependencies**
+   ```bash
+   # Initialize Git and DVC
+   git init
+   dvc init
 
-   - Minimal dependencies
-   - Version pinning
-   - Optional extras
-   - Development requirements
+   # Configure DVC storage
+   dvc remote add -d storage s3://bucket/path
+   ```
 
-3. **🧪 Testing**
-   - Unit test coverage
-   - Integration tests
-   - Benchmark suites
-   - CI/CD integration
+3. **UI Setup**
+   ```bash
+   # Add UI dependencies
+   poetry add --group ui streamlit gradio
+   # or
+   pip install streamlit gradio
+   ```
 
-## ✅ Project Creation Checklist
+### Best Practices
 
-```mermaid
-graph TD
-    A[Start] --> B[Setup]
-    B --> C[Documentation]
-    C --> D[Development]
-    D --> E[Integration]
-    E --> F[Complete]
-    style A fill:#f9f,stroke:#333
-    style F fill:#9ff,stroke:#333
-```
+1. **Dependency Management**
 
-1. **🚀 Initial Setup**
+   - Use Poetry for development
+   - Maintain requirements.txt for compatibility
+   - Group UI dependencies separately
 
-   - [ ] Create project directory
-   - [ ] Follow template structure
-   - [ ] Setup virtual environment
-   - [ ] Initialize git repository
+2. **UI Organization**
 
-2. **📝 Documentation**
+   - Keep UI code separate from ML logic
+   - Use shared static assets
+   - Modular UI components
 
-   - [ ] Create README.md
-   - [ ] Document installation
-   - [ ] Add usage examples
-   - [ ] Include API docs
+3. **Documentation**
+   - Document UI setup and usage
+   - Include screenshots/demos
+   - Provide API documentation
 
-3. **💻 Development**
-
-   - [ ] Setup development tools
-   - [ ] Configure linters
-   - [ ] Add type hints
-   - [ ] Write tests
-
-4. **🔄 Integration**
-   - [ ] Use core components
-   - [ ] Follow coding standards
-   - [ ] Add CI/CD config
-   - [ ] Setup monitoring
-
-## 🛠️ Resources
-
-### Development Tools
-
-- 🎨 Black for formatting
-- 🔍 Mypy for type checking
-- 🧪 Pytest for testing
-- 🔄 Pre-commit hooks
-
-### 📚 Documentation
-
-- Google style guide
-- Type hints guide
-- Documentation templates
-- Example projects
-
-### ⚡ Performance
-
-- Profiling tools
-- Benchmark suites
-- Optimization guides
-- Hardware requirements
-
-## 📝 Additional Notes
-
-- Keep projects focused and modular
-- Reuse core components
-- Follow consistent style
-- Maintain documentation
-- Regular updates
-- Performance optimization
-
-Remember: Each project should be self-contained, well-documented, and maintainable! 💪
+Remember: Keep ML and UI code separate but well-integrated. This makes both components easier to maintain and deploy! 💪
