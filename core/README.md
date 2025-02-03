@@ -9,7 +9,7 @@
 - [Core ML Components](#core-ml-components)
 - [Guidelines](#guidelines)
 - [Usage](#usage)
-- [Documentation](#documentation)
+- [Integration](#integration)
 
 ## Overview
 
@@ -20,29 +20,27 @@ This directory contains shared components, utilities, and base implementations u
 ```
 core/
 ├── models/               # Base model architectures and components
-│   ├── architectures/   # Neural network architectures
+│   ├── architectures/    # Neural network architectures
 │   ├── blocks/          # Reusable model blocks
 │   ├── heads/           # Task-specific model heads
-│   └── backbones/       # Feature extractors
+│   ├── backbones/       # Feature extractors
+│   └── versioning/      # Model version control utilities
 ├── data/                # Data processing components
 │   ├── datasets/        # Base dataset classes
 │   ├── transforms/      # Data augmentation
 │   ├── loaders/         # DataLoader utilities
-│   └── samplers/        # Sampling strategies
+│   ├── samplers/        # Sampling strategies
+│   └── monitoring/      # Data drift detection
 ├── pipelines/           # ML processing pipelines
 │   ├── training/        # Training workflows
 │   ├── inference/       # Inference optimization
 │   ├── evaluation/      # Metrics computation
 │   └── deployment/      # Model serving
-├── utils/               # Common utilities
-│   ├── metrics/         # Evaluation metrics
-│   ├── visualization/   # Result plotting
-│   ├── logging/         # Experiment logging
-│   └── optimization/    # Performance tools
-└── config/              # Base configurations
-    ├── models/          # Model configs
-    ├── data/            # Data configs
-    └── training/        # Training configs
+└── utils/               # Common utilities
+    ├── metrics/         # Evaluation metrics
+    ├── visualization/   # Result plotting
+    ├── logging/         # Experiment logging
+    └── optimization/    # Performance tools
 ```
 
 ## Core ML Components
@@ -121,97 +119,88 @@ class CustomTrainer(Trainer):
    - Batch processing
    - Mixed precision
 
-### 📦 Dependencies
+## Integration
 
-- Keep core requirements minimal
-- Version compatibility
-- Optional ML extras
-- Hardware requirements
+### 🔄 Project Integration
 
-### ✨ Development Standards
+Each project in the `projects/` directory should:
+
+1. **Import Core Components**
 
 ```python
-# Type hints
-from typing import Optional, Dict, Any
-import torch.nn as nn
+# Import base classes
+from core.models.architectures import BaseArchitecture
+from core.data.datasets import VisionDataset
+from core.pipelines.training import BaseTrainer
 
-class BaseModel(nn.Module):
-    def __init__(self, config: Dict[str, Any]) -> None:
+# Extend for project needs
+class ProjectModel(BaseArchitecture):
+    def __init__(self, config):
         super().__init__()
-        self.config = config
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError
-
-    def save_checkpoint(self, path: str) -> None:
-        # Implementation
-        pass
+        # Project-specific implementation
 ```
 
-## Usage
-
-### Model Development
+2. **Use Core Utilities**
 
 ```python
-from core.models import BaseModel
-from core.data import DataLoader
-from core.utils.config import load_config
-
-class CustomModel(BaseModel):
-    def __init__(self):
-        config = load_config('path/to/config.yaml')
-        super().__init__(config)
-        self.data = DataLoader(config)
-```
-
-### Pipeline Integration
-
-```python
-from core.pipelines import DataProcessor
+# Use shared utilities
 from core.utils.metrics import calculate_metrics
 from core.utils.visualization import plot_results
+from core.utils.logging import setup_logging
 
-# Example workflow
-processor = DataProcessor()
-results = processor.process(data)
-metrics = calculate_metrics(results)
-plot_results(metrics)
+# Project-specific usage
+logger = setup_logging(__name__)
+metrics = calculate_metrics(predictions, targets)
+plot_results(metrics, save_dir="experiments/results")
 ```
 
-## Component Relationships
+3. **Follow Project Structure**
 
-```mermaid
-graph TD
-    A[Project Code] --> B[Core Components]
-    B --> C[Models]
-    B --> D[Data]
-    B --> E[Pipelines]
-    B --> F[Utils]
-    C --> G[ML Projects]
-    D --> H[Processing]
-    E --> I[Training]
-    F --> J[Analysis]
+```
+project-name/
+├── src/              # Project-specific implementations
+│   ├── models/       # Extends core.models
+│   ├── data/         # Uses core.data
+│   └── utils/        # Project utilities
+├── tests/            # Project-specific tests
+├── experiments/      # Project experiments
+└── configs/          # Project configs
 ```
 
-## 🔄 ML Development Workflow
+### 📦 Dependencies
 
-```mermaid
-graph LR
-    A[Define Model] --> B[Create Dataset]
-    B --> C[Setup Pipeline]
-    C --> D[Train Model]
-    D --> E[Evaluate]
-    E --> F[Deploy]
-    style A fill:#f9f,stroke:#333
-    style F fill:#9ff,stroke:#333
+Core components require:
+
+```python
+# Base requirements
+python_requires='>=3.8'
+install_requires=[
+    'torch>=1.12.0',    # Deep learning
+    'numpy>=1.21.0',    # Array operations
+    'opencv-python>=4.5.0',  # Image processing
+    'albumentations>=1.0.0', # Augmentations
+]
 ```
 
-Remember: Core components should prioritize:
+Projects should include these in their `requirements.txt` or `pyproject.toml`.
 
-- Reproducibility
-- Scalability
-- Maintainability
-- Documentation
-- Testing coverage
+### 🔍 Best Practices
 
-These components form the foundation of all ML vision projects - keep them robust and well-documented! 💪
+1. **Code Reuse**
+
+   - Import from core instead of copying code
+   - Extend base classes for customization
+   - Use shared utilities consistently
+
+2. **Testing**
+
+   - Test project-specific implementations
+   - Verify core component integration
+   - Maintain test coverage
+
+3. **Documentation**
+   - Document custom implementations
+   - Reference core components
+   - Provide usage examples
+
+Remember: Core components provide the foundation - extend them in your projects, don't copy them! 💪

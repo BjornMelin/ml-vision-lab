@@ -1,263 +1,221 @@
-# Core Pipelines 🔄
+# Pipeline Components 🔄
 
-> Efficient data processing workflows for computer vision tasks
+> Efficient ML processing pipelines for computer vision tasks
 
 ## 📑 Table of Contents
 
 - [Overview](#overview)
 - [Directory Structure](#directory-structure)
-- [Pipeline Guidelines](#pipeline-guidelines)
-- [Best Practices](#best-practices)
+- [Components](#components)
 - [Usage Guidelines](#usage-guidelines)
-- [Testing Requirements](#testing-requirements)
-- [Additional Resources](#additional-resources)
+- [Best Practices](#best-practices)
 
 ## Overview
 
-This directory contains shared processing pipelines and data transformation workflows used across different vision projects.
+This directory contains reusable ML processing pipelines for training, inference, evaluation, and deployment of vision models.
 
 ## Directory Structure
 
-```mermaid
-graph TD
-    A[pipelines] --> B[preprocessing]
-    A --> C[augmentation]
-    A --> D[inference]
-    A --> E[evaluation]
-    B --> F[image]
-    B --> G[video]
-    B --> H[specialized]
-    C --> I[geometric]
-    C --> J[photometric]
-    C --> K[custom]
-    D --> L[batch]
-    D --> M[streaming]
-    D --> N[optimization]
-    E --> O[metrics]
-    E --> P[visualization]
-    E --> Q[reporting]
-```
-
 ```
 pipelines/
-├── preprocessing/        # Data preprocessing pipelines
-│   ├── image/           # Image preprocessing
-│   ├── video/           # Video preprocessing
-│   └── specialized/     # Domain-specific preprocessing
-├── augmentation/        # Data augmentation pipelines
-│   ├── geometric/       # Geometric transformations
-│   ├── photometric/     # Color and intensity
-│   └── custom/         # Custom augmentations
-├── inference/           # Inference pipelines
-│   ├── batch/          # Batch processing
-│   ├── streaming/      # Real-time processing
-│   └── optimization/   # Optimized inference
-└── evaluation/         # Evaluation pipelines
-    ├── metrics/        # Performance metrics
-    ├── visualization/  # Result visualization
-    └── reporting/      # Report generation
+├── training/           # Training workflows
+│   ├── trainer.py      # Base trainer
+│   ├── callbacks.py    # Training callbacks
+│   └── scheduler.py    # Learning rate scheduling
+├── inference/          # Inference pipelines
+│   ├── predictor.py    # Base predictor
+│   ├── optimizers.py   # Inference optimization
+│   └── serving.py      # Model serving
+├── evaluation/         # Evaluation pipelines
+│   ├── evaluator.py    # Base evaluator
+│   ├── metrics.py      # Evaluation metrics
+│   └── analysis.py     # Result analysis
+└── deployment/         # Deployment utilities
+    ├── exporter.py     # Model export
+    ├── converter.py    # Format conversion
+    └── profiler.py     # Performance profiling
 ```
 
-## 🛠️ Pipeline Guidelines
+## Components
 
-### Design Principles
-
-```mermaid
-mindmap
-  root((Pipeline Design))
-    Modularity
-      Independent components
-      Clear interfaces
-      Configurable params
-    Performance
-      Hardware acceleration
-      Memory optimization
-      Batch processing
-    Reliability
-      Error handling
-      Input validation
-      Progress tracking
-```
-
-1. **🧩 Modularity**
-
-   - Independent, reusable components
-   - Clear input/output interfaces
-   - Configurable parameters
-   - Easy to extend and modify
-
-2. **⚡ Performance**
-
-   - Efficient data handling
-   - Hardware acceleration
-   - Memory optimization
-   - Batch processing support
-
-3. **🎯 Reliability**
-   - Error handling
-   - Input validation
-   - Progress tracking
-   - Logging support
-
-### Pipeline Implementation
-
-```mermaid
-sequenceDiagram
-    participant Input
-    participant Preprocessor
-    participant Augmenter
-    participant Model
-    participant Output
-    Input->>Preprocessor: Raw Data
-    Preprocessor->>Augmenter: Processed Data
-    Augmenter->>Model: Augmented Data
-    Model->>Output: Predictions
-```
-
-Example preprocessing pipeline:
+### Training Pipeline
 
 ```python
-from typing import List, Optional
-import numpy as np
+from core.pipelines.training import Trainer
+from core.pipelines.training.callbacks import ModelCheckpoint
 
-class ImagePreprocessor:
-    def __init__(self,
-        target_size: tuple = (224, 224),
-        normalize: bool = True,
-        to_float: bool = True
-    ):
-        self.target_size = target_size
-        self.normalize = normalize
-        self.to_float = to_float
+class CustomTrainer(Trainer):
+    def __init__(self, model, config):
+        super().__init__()
+        self.model = model
+        self.callbacks = [
+            ModelCheckpoint(save_dir="checkpoints")
+        ]
 
-    def __call__(self,
-        images: List[np.ndarray]
-    ) -> List[np.ndarray]:
-        """Process a batch of images.
+    def train_epoch(self):
+        for batch in self.dataloader:
+            loss = self.train_step(batch)
+            self.log_metrics({'loss': loss})
 
-        Args:
-            images: List of input images
-
-        Returns:
-            List of processed images
-        """
-        processed = []
-        for img in images:
-            # Resize
-            img = cv2.resize(img, self.target_size)
-
-            # Convert to float
-            if self.to_float:
-                img = img.astype(np.float32) / 255.0
-
-            # Normalize
-            if self.normalize:
-                img = (img - img.mean()) / img.std()
-
-            processed.append(img)
-
-        return processed
+    def validate_epoch(self):
+        metrics = self.evaluate()
+        self.log_metrics(metrics)
 ```
 
-## ✨ Best Practices
+### Inference Pipeline
 
-### 📊 Data Handling
+```python
+from core.pipelines.inference import Predictor
+from core.pipelines.inference.optimizers import optimize_for_inference
 
-- Support multiple input formats
-- Implement proper validation
-- Handle edge cases
-- Provide data inspection tools
+class CustomPredictor(Predictor):
+    def __init__(self, model, config):
+        super().__init__()
+        self.model = optimize_for_inference(model)
 
-### ⚡ Performance Optimization
+    def preprocess(self, image):
+        # Implement preprocessing
+        return processed_image
+
+    def predict(self, image):
+        processed = self.preprocess(image)
+        return self.model(processed)
+```
+
+## Usage Guidelines
+
+### 1. Training Setup
+
+```python
+from core.pipelines.training import create_trainer
+from core.pipelines.training.callbacks import (
+    EarlyStopping,
+    ModelCheckpoint,
+    LearningRateScheduler
+)
+
+# Configure trainer
+trainer = create_trainer(
+    model=model,
+    optimizer=optimizer,
+    callbacks=[
+        EarlyStopping(patience=10),
+        ModelCheckpoint(save_best=True),
+        LearningRateScheduler()
+    ]
+)
+
+# Train model
+trainer.fit(
+    train_data=train_loader,
+    val_data=val_loader,
+    epochs=100
+)
+```
+
+### 2. Inference Setup
+
+```python
+from core.pipelines.inference import create_predictor
+from core.pipelines.inference.optimizers import (
+    quantize_model,
+    optimize_memory
+)
+
+# Optimize model
+model = quantize_model(model)
+model = optimize_memory(model)
+
+# Create predictor
+predictor = create_predictor(
+    model=model,
+    batch_size=32,
+    device='cuda'
+)
+
+# Run inference
+results = predictor.predict_batch(images)
+```
+
+## Best Practices
+
+### 1. Training
+
+- Monitor metrics
+- Save checkpoints
+- Handle interruptions
+- Log experiments
+- Validate frequently
+
+### 2. Inference
+
+- Optimize performance
+- Batch predictions
+- Cache results
+- Monitor latency
+- Profile memory
+
+### 3. Deployment
+
+- Version models
+- Test throughput
+- Monitor resources
+- Handle errors
+- Log predictions
+
+### 4. Pipeline Design
 
 ```mermaid
 graph LR
-    A[Input] -->|Batching| B[Memory]
-    B -->|Prefetch| C[GPU]
-    C -->|Pipeline| D[Output]
+    A[Data] --> B[Preprocess]
+    B --> C[Train/Infer]
+    C --> D[Postprocess]
+    D --> E[Output]
     style A fill:#f9f,stroke:#333
-    style D fill:#9ff,stroke:#333
+    style E fill:#9ff,stroke:#333
 ```
 
-- Use vectorized operations
-- Implement parallel processing
-- Enable GPU acceleration
-- Optimize memory usage
+Remember:
 
-### 🧪 Quality Assurance
+- Keep pipelines modular
+- Enable easy customization
+- Monitor performance
+- Log everything important
+- Handle errors gracefully
 
-- Unit test pipelines
-- Validate transformations
-- Monitor resource usage
-- Document performance characteristics
+## Integration
 
-## 🚀 Usage Guidelines
-
-1. **Pipeline Selection**
-
-```mermaid
-graph TD
-    A[Task Requirements] --> B{Data Type?}
-    B -->|Images| C[Image Pipeline]
-    B -->|Video| D[Video Pipeline]
-    B -->|Custom| E[Specialized Pipeline]
-```
-
-2. **Configuration**
-   - Set appropriate parameters
-   - Document configurations
-   - Version control settings
-   - Monitor performance
-
-Example usage:
+### With Core Components
 
 ```python
-from core.pipelines.preprocessing import ImagePreprocessor
-from core.pipelines.augmentation import AugmentationPipeline
+from core.models import create_model
+from core.data import create_dataloader
+from core.pipelines.training import create_trainer
 
-# Setup pipelines
-preprocessor = ImagePreprocessor(
-    target_size=(224, 224),
-    normalize=True
-)
+# Setup pipeline
+model = create_model(config)
+dataloader = create_dataloader(dataset, config)
+trainer = create_trainer(model, config)
 
-augmenter = AugmentationPipeline(
-    rotate=True,
-    flip=True,
-    color_jitter=0.2
-)
-
-# Process data
-processed_images = preprocessor(raw_images)
-augmented_images = augmenter(processed_images)
+# Train model
+trainer.fit(dataloader)
 ```
 
-## 🧪 Testing Requirements
+### With Projects
 
-1. **Unit Tests**
+```python
+from core.pipelines import BasePipeline
 
-   - Test individual components
-   - Validate transformations
-   - Check edge cases
-   - Verify error handling
+class ProjectPipeline(BasePipeline):
+    def __init__(self, config):
+        super().__init__()
+        self.setup_components(config)
 
-2. **Integration Tests**
+    def run(self):
+        # Project-specific pipeline
+        self.preprocess()
+        self.train()
+        self.evaluate()
+```
 
-   - Test pipeline combinations
-   - Verify data flow
-   - Check resource usage
-   - Validate outputs
-
-3. **Performance Tests**
-   - Measure throughput
-   - Monitor memory usage
-   - Test batch processing
-   - Verify GPU utilization
-
-## 📚 Additional Resources
-
-- [Data Pipeline Best Practices](https://pytorch.org/docs/stable/data.html)
-- [TensorFlow Data Pipelines](https://www.tensorflow.org/guide/data)
-- [OpenCV Image Processing](https://docs.opencv.org/4.x/d2/d96/tutorial_py_table_of_contents_imgproc.html)
-
-Remember: Efficient pipelines are the backbone of high-performance vision systems! 💪
+Remember: Build pipelines that are efficient, reliable, and easy to maintain! 💪

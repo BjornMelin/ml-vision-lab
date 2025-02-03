@@ -1,278 +1,240 @@
-# Core Utilities 🛠️
+# Utility Components 🛠️
 
-> Common utilities and tools for computer vision tasks
+> Common utilities and helper functions for ML vision tasks
 
 ## 📑 Table of Contents
 
 - [Overview](#overview)
 - [Directory Structure](#directory-structure)
-- [Utility Guidelines](#utility-guidelines)
-- [Categories of Utilities](#categories-of-utilities)
-- [Usage Examples](#usage-examples)
-- [Contributing Guidelines](#contributing-guidelines)
-- [Testing Requirements](#testing-requirements)
-- [Additional Resources](#additional-resources)
+- [Components](#components)
+- [Usage Guidelines](#usage-guidelines)
+- [Best Practices](#best-practices)
 
 ## Overview
 
-This directory contains common utility functions, helpers, and tools used across all vision projects.
+This directory contains shared utilities and helper functions used across different vision projects, providing common functionality for metrics, visualization, logging, and optimization.
 
 ## Directory Structure
 
-```mermaid
-graph TD
-    A[utils] --> B[io]
-    A --> C[visualization]
-    A --> D[metrics]
-    A --> E[hardware]
-    A --> F[logging]
-    B --> G[image]
-    B --> H[video]
-    B --> I[dataset]
-    C --> J[detection]
-    C --> K[tracking]
-    C --> L[plots]
-    D --> M[detection]
-    D --> N[classification]
-    D --> O[tracking]
-    E --> P[gpu]
-    E --> Q[memory]
-    F --> R[experiment]
-    F --> S[monitoring]
-```
-
 ```
 utils/
-├── io/                  # Input/Output utilities
-│   ├── image/          # Image reading/writing
-│   ├── video/          # Video handling
-│   └── dataset/        # Dataset management
-├── visualization/       # Visualization tools
-│   ├── detection/      # Detection visualization
-│   ├── tracking/       # Tracking visualization
-│   └── plots/          # Performance plots
-├── metrics/            # Evaluation metrics
-│   ├── detection/      # Detection metrics
-│   ├── classification/ # Classification metrics
-│   └── tracking/       # Tracking metrics
-├── hardware/           # Hardware utilities
-│   ├── gpu/           # GPU management
-│   └── memory/        # Memory management
-└── logging/           # Logging utilities
-    ├── experiment/    # Experiment logging
-    └── monitoring/    # Performance monitoring
+├── metrics/           # Evaluation metrics
+│   ├── classification.py # Classification metrics
+│   ├── detection.py     # Detection metrics
+│   └── segmentation.py  # Segmentation metrics
+├── visualization/     # Result visualization
+│   ├── plotting.py     # Plot generation
+│   ├── images.py       # Image visualization
+│   └── tensorboard.py  # TensorBoard logging
+├── logging/          # Experiment logging
+│   ├── logger.py      # Base logger
+│   ├── mlflow.py      # MLflow integration
+│   └── wandb.py       # Weights & Biases
+└── optimization/     # Performance tools
+    ├── profiler.py    # Code profiling
+    ├── memory.py      # Memory optimization
+    └── cuda.py        # GPU utilities
 ```
 
-## 🔧 Utility Guidelines
+## Components
 
-### Code Organization
-
-```mermaid
-mindmap
-  root((Utility Design))
-    Modularity
-      Self-contained
-      Limited dependencies
-      Single responsibility
-    Documentation
-      Detailed docstrings
-      Usage examples
-      Type hints
-    Testing
-      Unit tests
-      Edge cases
-      Performance
-```
-
-Example utility function:
+### Metrics
 
 ```python
-from typing import Union, Tuple
-import numpy as np
+from core.utils.metrics import (
+    calculate_accuracy,
+    calculate_precision_recall,
+    calculate_map
+)
 
-def resize_preserve_aspect(
-    image: np.ndarray,
-    target_size: Tuple[int, int],
-    padding_value: Union[int, Tuple[int, ...]] = 0
-) -> np.ndarray:
-    """Resize image preserving aspect ratio with padding.
+# Classification metrics
+accuracy = calculate_accuracy(predictions, targets)
+precision, recall = calculate_precision_recall(predictions, targets)
 
-    Args:
-        image: Input image array
-        target_size: Desired output size (width, height)
-        padding_value: Value for padding
-
-    Returns:
-        Resized and padded image
-
-    Example:
-        >>> img = load_image("example.jpg")
-        >>> resized = resize_preserve_aspect(img, (224, 224))
-    """
-    # Implementation
-    ...
-```
-
-### ✨ Best Practices
-
-1. **🎯 Error Handling**
-
-```mermaid
-graph TD
-    A[Input] --> B{Valid?}
-    B -->|Yes| C[Process]
-    B -->|No| D[Error]
-    C --> E{Success?}
-    E -->|Yes| F[Return]
-    E -->|No| G[Handle]
-```
-
-- Validate inputs
-- Descriptive error messages
-- Proper exception types
-- Graceful fallbacks
-
-2. **⚡ Performance**
-
-   - Optimize common operations
-   - Cache when appropriate
-   - Profile critical paths
-   - Document characteristics
-
-3. **🧪 Testing**
-   - Unit test coverage
-   - Edge case handling
-   - Performance benchmarks
-   - Integration tests
-
-## 📦 Categories of Utilities
-
-### 🔄 IO Utilities
-
-```mermaid
-graph LR
-    A[Input] -->|Load| B[Process]
-    B -->|Save| C[Output]
-    B -->|Cache| D[Memory]
-```
-
-- Image loading/saving
-- Video reading/writing
-- Dataset management
-- Cache handling
-- Format conversion
-
-### 📊 Visualization
-
-- Bounding box drawing
-- Segmentation masks
-- Tracking trajectories
-- Performance plots
-- Interactive visualizations
-
-### 📈 Metrics
-
-```mermaid
-graph TD
-    A[Predictions] --> C[Metrics]
-    B[Ground Truth] --> C
-    C --> D[Analysis]
-    D --> E[Report]
-```
-
-- Standard metrics implementation
-- Custom metric utilities
-- Statistical analysis
-- Evaluation helpers
-
-### 🖥️ Hardware Management
-
-- GPU memory management
-- CPU/GPU synchronization
-- Memory optimization
-- Device selection
-
-### 📝 Logging
-
-- Experiment tracking
-- Performance monitoring
-- Debug logging
-- Progress tracking
-
-## 🚀 Usage Examples
-
-### Image Processing
-
-```python
-from core.utils.io import load_image
-from core.utils.visualization import draw_boxes
-
-# Load and process image
-image = load_image("example.jpg")
-boxes = detector.predict(image)
-visualized = draw_boxes(image, boxes)
-```
-
-### Metrics Calculation
-
-```python
-from core.utils.metrics import calculate_map
-
-# Calculate metrics
-results = calculate_map(
-    predictions=pred_boxes,
-    ground_truth=gt_boxes,
+# Detection metrics
+map_score = calculate_map(
+    predictions,
+    targets,
     iou_threshold=0.5
 )
 ```
 
-### Hardware Management
+### Visualization
 
 ```python
-from core.utils.hardware import gpu_memory_info
+from core.utils.visualization import (
+    plot_results,
+    visualize_predictions,
+    log_to_tensorboard
+)
 
-# Monitor GPU usage
-memory_stats = gpu_memory_info()
-print(f"GPU Memory Used: {memory_stats['used_gb']:.2f} GB")
+# Plot results
+plot_results(
+    metrics_dict,
+    save_path="results/plot.png"
+)
+
+# Visualize predictions
+visualize_predictions(
+    images,
+    predictions,
+    targets,
+    save_dir="results/viz"
+)
 ```
 
-## 🤝 Contributing Guidelines
+### Logging
 
-When adding new utilities:
+```python
+from core.utils.logging import setup_logging, MLflowLogger
 
-1. Follow existing directory structure
-2. Document thoroughly
-3. Include usage examples
-4. Add unit tests
-5. Consider performance
-6. Maintain compatibility
+# Setup logging
+logger = setup_logging(
+    name=__name__,
+    log_file="logs/training.log"
+)
 
-## 🧪 Testing Requirements
+# MLflow logging
+mlflow_logger = MLflowLogger(
+    experiment_name="vision_experiment",
+    tracking_uri="mlruns"
+)
+mlflow_logger.log_params(config)
+mlflow_logger.log_metrics(metrics)
+```
 
-1. **Unit Tests**
+## Usage Guidelines
 
-   - Test all public functions
-   - Cover edge cases
-   - Validate error handling
-   - Check performance
+### 1. Metrics Tracking
 
-2. **Documentation**
+```python
+from core.utils.metrics import MetricsTracker
 
-   - Clear docstrings
-   - Usage examples
-   - Parameter descriptions
-   - Return value specs
+# Initialize tracker
+tracker = MetricsTracker(
+    metrics=['accuracy', 'loss'],
+    save_dir='logs'
+)
 
-3. **Performance**
-   - Benchmark critical utilities
-   - Profile memory usage
-   - Test with large inputs
-   - Document limitations
+# Update metrics
+tracker.update({
+    'accuracy': 0.85,
+    'loss': 0.32
+})
 
-## 📚 Additional Resources
+# Get summary
+summary = tracker.get_summary()
+```
 
-- [NumPy Documentation](https://numpy.org/doc/stable/)
-- [OpenCV Python Tutorials](https://docs.opencv.org/4.x/d6/d00/tutorial_py_root.html)
-- [Python Performance Tips](https://wiki.python.org/moin/PythonSpeed/PerformanceTips)
+### 2. Visualization
 
-Remember: Well-designed utilities make your code cleaner, faster, and more maintainable! 💪
+```python
+from core.utils.visualization import (
+    plot_learning_curves,
+    create_confusion_matrix
+)
+
+# Plot learning curves
+plot_learning_curves(
+    train_metrics,
+    val_metrics,
+    save_path='plots/learning_curves.png'
+)
+
+# Create confusion matrix
+create_confusion_matrix(
+    predictions,
+    targets,
+    save_path='plots/confusion_matrix.png'
+)
+```
+
+### 3. Optimization
+
+```python
+from core.utils.optimization import (
+    profile_model,
+    optimize_memory_usage
+)
+
+# Profile model
+profile_results = profile_model(
+    model,
+    input_shape=(1, 3, 224, 224)
+)
+
+# Optimize memory
+optimize_memory_usage(
+    model,
+    batch_size=32
+)
+```
+
+## Best Practices
+
+### 1. Logging
+
+- Use structured logging
+- Include timestamps
+- Set appropriate levels
+- Handle exceptions
+- Rotate log files
+
+### 2. Visualization
+
+- Use consistent styling
+- Add proper labels
+- Include legends
+- Save high quality
+- Enable interactivity
+
+### 3. Metrics
+
+- Validate inputs
+- Handle edge cases
+- Use appropriate metrics
+- Track uncertainties
+- Save raw data
+
+### 4. Optimization
+
+- Profile before optimizing
+- Monitor memory usage
+- Track GPU utilization
+- Benchmark changes
+- Document optimizations
+
+## Integration
+
+### With Core Components
+
+```python
+from core.models import BaseModel
+from core.utils.optimization import optimize_model
+from core.utils.logging import log_model_summary
+
+class OptimizedModel(BaseModel):
+    def __init__(self, config):
+        super().__init__(config)
+        self.model = optimize_model(self.model)
+        log_model_summary(self.model)
+```
+
+### With Projects
+
+```python
+from core.utils import setup_project
+
+# Setup project
+logger, metrics, viz = setup_project(
+    name="vision_project",
+    config=config
+)
+
+# Use utilities
+logger.info("Starting training...")
+metrics.update(train_metrics)
+viz.plot_results(results)
+```
+
+Remember: Good utilities make development faster and more reliable! 💪
