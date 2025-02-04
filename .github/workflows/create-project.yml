@@ -32,28 +32,66 @@ jobs:
         id: format-name
         shell: bash
         run: |
-          # Validate project name
-          if [[ ! "${{ github.event.inputs.project_name }}" =~ ^[a-zA-Z0-9][a-zA-Z0-9\s\-_\.]*$ ]]; then
-            echo "Error: Project name must start with alphanumeric and contain only letters, numbers, spaces, hyphens, underscores, or dots"
+          # Store and debug project name
+          project_name="${{ github.event.inputs.project_name }}"
+          # Trim whitespace
+          project_name="${project_name#"${project_name%%[![:space:]]*}"}"
+          project_name="${project_name%"${project_name##*[![:space:]]}"}"
+
+          # Check if empty after trim
+          if [ -z "$project_name" ]; then
+            echo "Error: Project name cannot be empty"
             exit 1
           fi
 
+          echo "Project name (after trim): '$project_name'"
+          echo "Length: ${#project_name}"
+          echo "First character: '${project_name:0:1}'"
+          echo "Hexdump of project name:"
+          echo -n "$project_name" | xxd
+          # Validate project name
+          regex='^[[:alnum:]][-[:alnum:]._[:space:]]*$'
+          echo "Using regex pattern: $regex"
+          if [[ ! "$project_name" =~ $regex ]]; then
+            echo "Error: Project name must start with alphanumeric and contain only letters, numbers, spaces, hyphens, underscores, or dots"
+            echo "Project name validation failed"
+            echo "Regex match result: $?"
+            exit 1
+          fi
+          echo "Project name validation passed"
+
           # Convert to lowercase, replace spaces/underscores with hyphens, remove invalid chars
-          formatted_name=$(echo "${{ github.event.inputs.project_name }}" | \
+          formatted_name=$(echo "$project_name" | \
             tr '[:upper:]' '[:lower:]' | \
             sed 's/[^a-z0-9]/-/g' | \
             sed 's/-\+/-/g' | \
             sed 's/^-\|-$//g')
 
-          echo "Formatted project name: $formatted_name"
-          echo "formatted_name=$formatted_name" >> $GITHUB_ENV
-
-          # Validate version format
-          if [[ ! "${{ github.event.inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Error: Version must be in format X.Y.Z where X, Y, and Z are numbers"
-            echo "Example: 0.1.0, 1.0.0, 2.3.1"
+          # Validate formatted name is not empty
+          if [ -z "$formatted_name" ]; then
+            echo "Error: Formatted project name is empty after processing"
             exit 1
           fi
+
+          echo "Formatted project name: '$formatted_name'"
+          # Use GitHub Actions environment file commands
+          {
+            echo "formatted_name=$formatted_name"
+            echo "formatted_name=$formatted_name" >> "$GITHUB_OUTPUT"
+          } >> "$GITHUB_ENV"
+
+          # Store and validate version
+          version="${{ github.event.inputs.version }}"
+          echo "Version: '$version'"
+
+          # Validate version format
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Version must be in format X.Y.Z where X, Y, and Z are numbers"
+            echo "Example: 0.1.0, 1.0.0, 2.3.1"
+            echo "Got version: '$version'"
+            exit 1
+          fi
+          echo "Version validation passed"
 
       - name: Create Project Structure
         shell: bash
