@@ -155,25 +155,6 @@ jobs:
           dvc = "^3.0.0"
           EOF
 
-          # Create .gitignore
-          cat << 'EOF' > "$project_dir/.gitignore"
-          artifacts/
-          *.pyc
-          __pycache__/
-          .ipynb_checkpoints
-          .env
-          .dvc/cache
-          .dvc/tmp
-          EOF
-
-          # Create .dvcignore
-          cat << 'EOF' > "$project_dir/.dvcignore"
-          artifacts/
-          *.pyc
-          __pycache__/
-          .ipynb_checkpoints
-          EOF
-
           # Create .env.example
           cat << 'EOF' > "$project_dir/.env.example"
           # Model parameters
@@ -233,6 +214,7 @@ jobs:
               dir = .dvc/cache
           EOF
 
+          # Track raw data directory with DVC
           dvc add data/raw/
 
       - name: Add and Commit Changes
