@@ -1,20 +1,42 @@
 [tool.poetry]
 name = "food-classification"
 version = "0.1.0"
-description = "This project provides a complete, reproducible pipeline for training and deploying a food classification model using the Food-101 dataset. It leverages PyTorch (with timm) for model development, Hydra for flexible configuration, and integrates DVC for data/model versioning alongside MLflow for experiment tracking. A Streamlit UI offers an intuitive interface for uploading images and visualizing classification results in real time."
+description = "A food classification model pipeline using Food-101 dataset, built with PyTorch and MLflow, featuring a Streamlit UI for inference."
 
 [tool.poetry.dependencies]
 python = "^3.11"
-torch = "^2.1.0"
-torchvision = "^0.16.0"
-numpy = "^1.26.4"
-pyyaml = "^6.0.1"
-pillow = "^10.1.0"
+# Non-CUDA hardware - use CPU only
+torch = {version = ">=2.4.0", extras = ["cpu"]}
+torchvision = { version = ">=0.19.0", extras = ["cpu"] }
+# Uncomment the following lines to leverage GPU with CUDA
+# torch = "^2.4.0"
+# torchvision = "^0.19.0"
+numpy = "^2.2.2"
+pyyaml = "^6.0.2"
+pillow = "^11.1.0"
 
 [tool.poetry.group.ui.dependencies]
-streamlit = "^1.29.2"
+streamlit = "^1.41.1"
+# protobuf = "<4.0.0"  # Prevent conflict with TensorFlow
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^7.4.3"
+pytest = "^8.3.4"
 black = "^24.1.0"
-dvc = "^3.0.0"
+dvc = "^3.59.0"
+
+[tool.isort]
+profile = "black"
+skip_gitignore = true
+line_length = 88
+
+[tool.black]
+target-version = ["py311"]
+skip-magic-trailing-comma = true
+
+[tool.mypy]
+python_version = "3.11"
+strict_equality = true
+
+[tool.pytest.ini_options]
+addopts = "--cov=src --cov-report=term-missing"
+junit_family = "xunit2"
