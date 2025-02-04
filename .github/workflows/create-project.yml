@@ -32,10 +32,10 @@ jobs:
             sed 's/[^a-z0-9]/-/g' | \
             sed 's/-\+/-/g' | \
             sed 's/^-\|-$//g')
-          
+
           echo "Formatted project name: $formatted_name"
           echo "formatted_name=$formatted_name" >> $GITHUB_ENV
-          
+
           # Validate version format
           if [[ ! "${{ github.event.inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Error: Version must be in format X.Y.Z where X, Y, and Z are numbers"
@@ -47,7 +47,7 @@ jobs:
         shell: bash
         run: |
           project_dir="projects/${{ env.formatted_name }}"
-          
+
           # Create main project directories
           mkdir -p "$project_dir"/src/{data,models,utils}
           mkdir -p "$project_dir"/scripts
@@ -58,10 +58,10 @@ jobs:
           mkdir -p "$project_dir"/ui/streamlit/pages
           mkdir -p "$project_dir"/tests
           mkdir -p "$project_dir"/configs
-          
+
           # Create data directories
           mkdir -p "$project_dir"/data/{raw,processed}
-          
+
           # Create placeholder files
           touch "$project_dir"/data/raw/.gitkeep
           touch "$project_dir"/data/processed/.gitkeep
@@ -73,7 +73,7 @@ jobs:
         shell: bash
         run: |
           project_dir="projects/${{ env.formatted_name }}"
-          
+
           # Create dataset.py
           cat << 'DATASETEOF' > "$project_dir/src/data/dataset.py"
           from typing import Any
@@ -126,7 +126,7 @@ jobs:
         shell: bash
         run: |
           project_dir="projects/${{ env.formatted_name }}"
-          
+
           # Create pyproject.toml
           cat << EOF > "$project_dir/pyproject.toml"
           [tool.poetry]
@@ -208,8 +208,15 @@ jobs:
         run: |
           project_dir="projects/${{ env.formatted_name }}"
           cd "$project_dir"
-          dvc init
-          
+
+          # Initialize Git in the project directory
+          git init
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          # Initialize DVC
+          dvc init --subdir
+
           # Configure DVC
           mkdir -p .dvc
           cat << 'EOF' > .dvc/config
@@ -220,7 +227,7 @@ jobs:
               type = "hardlink,symlink"
               dir = .dvc/cache
           EOF
-          
+
           dvc add data/raw/
 
       - name: Create Pull Request
@@ -229,18 +236,18 @@ jobs:
           title: "feat(project): Initialize ${{ env.formatted_name }} project"
           commit-message: "feat(project): Initialize ${{ env.formatted_name }} project structure"
           branch: "feat/${{ github.event.inputs.version }}/init-${{ env.formatted_name }}"
-          base: "dev"  # Specify dev as the base branch
+          base: "dev" # Specify dev as the base branch
           delete-branch: true
           body: |
             This PR initializes a new ML/CV project: **${{ env.formatted_name }}**
-            
+
             ## Description
             ${{ github.event.inputs.project_description }}
-            
+
             ## Project Structure
             - Created standard ML project structure following best practices
             - Initialized basic Python files and configurations
             - Set up DVC for data version control
             - Added essential configuration files
-            
+
             Please review the project structure and configuration files.
