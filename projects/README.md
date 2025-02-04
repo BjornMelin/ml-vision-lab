@@ -47,7 +47,7 @@ graph TD
 
 ### Standard Project Structure
 
-```
+```plaintext
 project-name/
 ├── README.md          # Project documentation
 ├── pyproject.toml    # Poetry/project metadata

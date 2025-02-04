@@ -131,7 +131,7 @@ streamlit run ui/streamlit/app.py
 
 ## Project Structure
 
-```
+```plaintext
 food-classification/
 ├── src/                # Source code
 │   ├── data/          # Data processing
