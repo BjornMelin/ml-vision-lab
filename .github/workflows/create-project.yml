@@ -1,0 +1,246 @@
+name: Create New Project
+on:
+  workflow_dispatch:
+    inputs:
+      project_name:
+        description: "Name of the new project (will be converted to lowercase with hyphens)"
+        required: true
+        type: string
+      project_description:
+        description: "Brief description of the project"
+        required: true
+        type: string
+      version:
+        description: "Project version (e.g., 0.1.0)"
+        required: true
+        type: string
+        default: "0.1.0"
+
+jobs:
+  create-project:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Format Project Name
+        id: format-name
+        shell: bash
+        run: |
+          # Convert to lowercase, replace spaces/underscores with hyphens, remove invalid chars
+          formatted_name=$(echo "${{ github.event.inputs.project_name }}" | \
+            tr '[:upper:]' '[:lower:]' | \
+            sed 's/[^a-z0-9]/-/g' | \
+            sed 's/-\+/-/g' | \
+            sed 's/^-\|-$//g')
+          
+          echo "Formatted project name: $formatted_name"
+          echo "formatted_name=$formatted_name" >> $GITHUB_ENV
+          
+          # Validate version format
+          if [[ ! "${{ github.event.inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Version must be in format X.Y.Z where X, Y, and Z are numbers"
+            echo "Example: 0.1.0, 1.0.0, 2.3.1"
+            exit 1
+          fi
+
+      - name: Create Project Structure
+        shell: bash
+        run: |
+          project_dir="projects/${{ env.formatted_name }}"
+          
+          # Create main project directories
+          mkdir -p "$project_dir"/src/{data,models,utils}
+          mkdir -p "$project_dir"/scripts
+          mkdir -p "$project_dir"/notebooks/{exploration,modeling,evaluation}
+          mkdir -p "$project_dir"/experiments/{runs,models,results}
+          mkdir -p "$project_dir"/artifacts/{temp,cache,debug}
+          mkdir -p "$project_dir"/docs/{api,guides}
+          mkdir -p "$project_dir"/ui/streamlit/pages
+          mkdir -p "$project_dir"/tests
+          mkdir -p "$project_dir"/configs
+          
+          # Create data directories
+          mkdir -p "$project_dir"/data/{raw,processed}
+          
+          # Create placeholder files
+          touch "$project_dir"/data/raw/.gitkeep
+          touch "$project_dir"/data/processed/.gitkeep
+          touch "$project_dir"/experiments/runs/.gitkeep
+          touch "$project_dir"/experiments/models/.gitkeep
+          touch "$project_dir"/experiments/results/.gitkeep
+
+      - name: Create Python Files
+        shell: bash
+        run: |
+          project_dir="projects/${{ env.formatted_name }}"
+          
+          # Create dataset.py
+          cat << 'DATASETEOF' > "$project_dir/src/data/dataset.py"
+          from typing import Any
+
+          class Dataset:
+              def __init__(self) -> None:
+                  pass
+                  
+              def __getitem__(self, index: int) -> Any:
+                  pass
+                  
+              def __len__(self) -> int:
+                  pass
+          DATASETEOF
+
+          # Create model.py
+          cat << 'MODELEOF' > "$project_dir/src/models/model.py"
+          import torch.nn as nn
+
+          class Model(nn.Module):
+              def __init__(self):
+                  super().__init__()
+                  
+              def forward(self, x):
+                  return x
+          MODELEOF
+
+          # Create train.py
+          cat << 'TRAINEOF' > "$project_dir/scripts/train.py"
+          from pathlib import Path
+          import sys
+
+          # Add project root to path
+          project_root = Path(__file__).parent.parent
+          sys.path.append(str(project_root))
+
+          from src.models.model import Model
+          from src.data.dataset import Dataset
+
+          def train():
+              model = Model()
+              # Add training logic here
+              pass
+
+          if __name__ == '__main__':
+              train()
+          TRAINEOF
+
+      - name: Create Project Configuration
+        shell: bash
+        run: |
+          project_dir="projects/${{ env.formatted_name }}"
+          
+          # Create pyproject.toml
+          cat << EOF > "$project_dir/pyproject.toml"
+          [tool.poetry]
+          name = "${{ env.formatted_name }}"
+          version = "${{ github.event.inputs.version }}"
+          description = "${{ github.event.inputs.project_description }}"
+
+          [tool.poetry.dependencies]
+          python = "^3.11"
+          torch = "^2.3.0"
+          opencv-python = "^5.0.0"
+
+          [tool.poetry.group.ui.dependencies]
+          streamlit = "^1.32.0"
+          gradio = "^4.19.0"
+
+          [tool.poetry.group.dev.dependencies]
+          pytest = "^7.0.0"
+          black = "^23.0.0"
+          dvc = "^3.0.0"
+          EOF
+
+          # Create .gitignore
+          cat << 'EOF' > "$project_dir/.gitignore"
+          artifacts/
+          *.pyc
+          __pycache__/
+          .ipynb_checkpoints
+          .env
+          .dvc/cache
+          .dvc/tmp
+          EOF
+
+          # Create .dvcignore
+          cat << 'EOF' > "$project_dir/.dvcignore"
+          artifacts/
+          *.pyc
+          __pycache__/
+          .ipynb_checkpoints
+          EOF
+
+          # Create .env.example
+          cat << 'EOF' > "$project_dir/.env.example"
+          # Model parameters
+          MODEL_NAME=model-v1
+          BATCH_SIZE=32
+          NUM_WORKERS=4
+
+          # Storage configuration
+          DATA_DIR=data
+          ARTIFACTS_DIR=artifacts
+          DVC_REMOTE=s3://bucket/path
+
+          # Training parameters
+          LEARNING_RATE=0.001
+          NUM_EPOCHS=100
+          DEVICE=cuda
+          EOF
+
+      - name: Create README
+        shell: bash
+        run: |
+          project_dir="projects/${{ env.formatted_name }}"
+          readme_template="projects/README-template.md"
+          # Use printf to properly escape special characters in the description
+          description=$(printf '%s\n' "${{ github.event.inputs.project_description }}" | sed 's/[\/&]/\\&/g')
+          sed -e "s/\[Project Name\]/${{ env.formatted_name }}/" \
+              -e "s/\[Brief project description\]/$description/" \
+              -e "s/\[Your Name\]/Generated via GitHub Actions/" \
+              "$readme_template" > "$project_dir/README.md"
+
+      - name: Install DVC
+        run: |
+          python -m pip install --upgrade pip
+          pip install dvc[s3]
+
+      - name: Initialize Git and DVC
+        shell: bash
+        run: |
+          project_dir="projects/${{ env.formatted_name }}"
+          cd "$project_dir"
+          dvc init
+          
+          # Configure DVC
+          mkdir -p .dvc
+          cat << 'EOF' > .dvc/config
+          [core]
+              remote = storage
+              autostage = true
+          [cache]
+              type = "hardlink,symlink"
+              dir = .dvc/cache
+          EOF
+          
+          dvc add data/raw/
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          title: "feat(project): Initialize ${{ env.formatted_name }} project"
+          commit-message: "feat(project): Initialize ${{ env.formatted_name }} project structure"
+          branch: "feat/${{ github.event.inputs.version }}/init-${{ env.formatted_name }}"
+          base: "dev"  # Specify dev as the base branch
+          delete-branch: true
+          body: |
+            This PR initializes a new ML/CV project: **${{ env.formatted_name }}**
+            
+            ## Description
+            ${{ github.event.inputs.project_description }}
+            
+            ## Project Structure
+            - Created standard ML project structure following best practices
+            - Initialized basic Python files and configurations
+            - Set up DVC for data version control
+            - Added essential configuration files
+            
+            Please review the project structure and configuration files.
