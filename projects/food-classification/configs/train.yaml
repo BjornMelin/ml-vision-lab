@@ -1,0 +1,11 @@
+model:
+  num_classes: 10
+
+data:
+  root: data
+  batch_size: 32
+  num_workers: 4
+
+train:
+  epochs: 100
+  lr: 0.001
