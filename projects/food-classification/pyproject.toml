@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "food-classification"
+version = "0.1.0"
+description = "This project provides a complete, reproducible pipeline for training and deploying a food classification model using the Food-101 dataset. It leverages PyTorch (with timm) for model development, Hydra for flexible configuration, and integrates DVC for data/model versioning alongside MLflow for experiment tracking. A Streamlit UI offers an intuitive interface for uploading images and visualizing classification results in real time."
+
+[tool.poetry.dependencies]
+python = "^3.11"
+torch = "^2.3.0"
+opencv-python = "^5.0.0"
+
+[tool.poetry.group.ui.dependencies]
+streamlit = "^1.32.0"
+gradio = "^4.19.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0.0"
+black = "^23.0.0"
+dvc = "^3.0.0"
