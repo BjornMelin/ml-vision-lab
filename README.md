@@ -10,7 +10,7 @@
 
 > Modular computer vision implementations - A collection of production-grade vision systems spanning multiple domains.
 
-**Featured Projects** • [Installation](#installation) • [Project Structure](#-project-organization) • [Contributing](#-contributing)
+[Featured Projects](#-project-matrix) • [Installation](#-installation) • [Quick Start](#-quick-start) • [Contributing](#-contributing)
 
 ## 📑 Table of Contents
 
@@ -33,6 +33,23 @@
 
 ## 🗂️ Project Organization
 
+```mermaid
+graph TD
+    A[ML Vision Lab] --> B[projects]
+    A --> C[core]
+    A --> D[docs]
+    B --> E[food-classification]
+    B --> F[object-detection]
+    B --> G[medical-imaging]
+    B --> H[satellite-analysis]
+    C --> I[utils]
+    C --> J[models]
+    C --> K[pipelines]
+    D --> L[api]
+    D --> M[guides]
+    D --> N[architecture]
+```
+
 ```
 ml-vision-lab/
 ├── projects/               # Individual vision projects
@@ -48,6 +65,29 @@ ml-vision-lab/
 ```
 
 ## ✨ Core Features
+
+```mermaid
+mindmap
+  root((ML Vision Lab))
+    Cross-Project
+      Modular architecture
+      Shared pipelines
+      Hardware optimization
+      Standardized metrics
+    Project Types
+      Classification
+      Detection
+      Medical
+      Satellite
+    Optimization
+      GPU acceleration
+      TensorRT
+      Memory efficiency
+    Development
+      MLflow tracking
+      DVC versioning
+      CI/CD pipelines
+```
 
 **Cross-Project Capabilities**
 
@@ -78,6 +118,20 @@ ml-vision-lab/
 - NVIDIA GPU (Compute Capability 6.0+)
 
 ## 🛠️ Tech Stack
+
+```mermaid
+graph TD
+    A[Tech Stack] --> B[Core Libraries]
+    A --> C[Project Libraries]
+    B --> D[PyTorch]
+    B --> E[TensorFlow]
+    B --> F[OpenCV]
+    B --> G[CUDA]
+    C --> H[MONAI]
+    C --> I[RasterIO]
+    C --> J[DeepSORT]
+    C --> K[MLflow]
+```
 
 **Core Libraries**
 
@@ -153,6 +207,19 @@ analyzer.process_stream("input.mp4", output="results.mp4")
 
 ## 🔧 Development Standards
 
+```mermaid
+flowchart TD
+    A[Development] --> B[Code Quality]
+    A --> C[Testing]
+    A --> D[Documentation]
+    B --> E[Black]
+    B --> F[MyPy]
+    C --> G[PyTest]
+    C --> H[Coverage]
+    D --> I[Docstrings]
+    D --> J[Examples]
+```
+
 **Code Quality**
 
 ```bash
@@ -197,6 +264,16 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
 ## 📚 Documentation
 
 ### Pipeline Optimization
+
+```mermaid
+graph LR
+    A[Input] --> B[Preprocessing]
+    B --> C[Inference]
+    C --> D[Postprocessing]
+    B --> E[GPU Pipeline]
+    C --> F[TensorRT]
+    D --> G[Batch Processing]
+```
 
 - GPU-accelerated preprocessing
 - Batch processing optimization
@@ -261,5 +338,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - NVIDIA for CUDA and TensorRT support
 
 ---
+
+![Architecture Overview](docs/architecture/overview.png)
 
 Made with 👁️ and ❤️ by Bjorn Melin

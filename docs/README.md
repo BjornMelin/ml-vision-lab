@@ -6,14 +6,35 @@
 
 - [Overview](#overview)
 - [Directory Structure](#directory-structure)
-- [Documentation Guidelines](#documentation-guidelines)
-- [Document Types](#document-types)
-- [Best Practices](#best-practices)
-- [Contribution Guidelines](#contribution-guidelines)
-- [Tools and Resources](#tools-and-resources)
-- [Maintenance](#maintenance)
+- [Documentation Guidelines](#-documentation-guidelines)
+- [Document Types](#-document-types)
+- [Best Practices](#-best-practices)
+- [Contribution Guidelines](#-contribution-guidelines)
+- [Tools and Resources](#-tools-and-resources)
+- [Maintenance](#-maintenance)
 
 ## Overview
+
+```mermaid
+mindmap
+  root((ML Vision Lab Docs))
+    API References
+      Core Components
+      Project Modules
+      Examples
+    User Guides
+      Getting Started
+      Tutorials
+      Best Practices
+    Architecture
+      System Design
+      Components
+      Patterns
+    Development
+      Setup
+      Workflow
+      Standards
+```
 
 This directory contains comprehensive documentation for the ML Vision Lab project, including guides, tutorials, API references, and best practices.
 
@@ -37,6 +58,12 @@ graph TD
     E --> O[setup]
     E --> P[workflow]
     E --> Q[standards]
+
+    style A fill:#f9f,stroke:#333
+    style B fill:#bbf,stroke:#333
+    style C fill:#bfb,stroke:#333
+    style D fill:#fbf,stroke:#333
+    style E fill:#ffb,stroke:#333
 ```
 
 ```
@@ -65,19 +92,23 @@ docs/
 
 ```mermaid
 mindmap
-  root((Documentation))
-    Style
-      Clear language
+  root((Documentation Style))
+    Language
+      Clear
       Concise
-      Technical accuracy
+      Technical
     Structure
       Logical flow
       Examples
       References
+    Components
+      Code samples
+      Diagrams
+      Screenshots
     Maintenance
-      Regular updates
-      Version control
       Reviews
+      Updates
+      Versions
 ```
 
 - Use clear, concise language
@@ -85,82 +116,103 @@ mindmap
 - Include practical examples
 - Keep content up-to-date
 - Link related documentation
+- Add visual elements when beneficial
 
-### 📘 Document Types
-
-#### 1. API Documentation
-
-```mermaid
-graph TD
-    A[API Docs] --> B[Functions]
-    A --> C[Classes]
-    A --> D[Modules]
-    B --> E[Parameters]
-    B --> F[Returns]
-    B --> G[Examples]
-    style A fill:#f9f,stroke:#333
-```
-
-Example API documentation:
+### Style Guide Reference
 
 ```python
+# Example of good documentation style
 def process_image(
     image_path: str,
-    target_size: Tuple[int, int] = (224, 224),
+    target_size: tuple[int, int] = (224, 224),
     normalize: bool = True
 ) -> np.ndarray:
     """Process an image for model inference.
 
+    Loads, resizes, and normalizes an image for neural network input.
+    Supports common image formats (JPEG, PNG, BMP) and handles color
+    space conversion automatically.
+
     Args:
-        image_path: Path to input image
-        target_size: Desired output size (width, height)
-        normalize: Whether to normalize pixel values
+        image_path: Path to input image file
+        target_size: Desired output dimensions (width, height)
+        normalize: Whether to normalize pixel values to [0,1]
 
     Returns:
-        Processed image as numpy array
+        Processed image as numpy array of shape (H,W,C)
 
     Raises:
         FileNotFoundError: If image_path doesn't exist
-        ValueError: If target_size is invalid
+        ValueError: If target_size contains non-positive values
 
-    Example:
+    Examples:
         >>> img = process_image("image.jpg", (224, 224))
         >>> print(img.shape)
         (224, 224, 3)
     """
 ```
 
-#### 2. 📖 User Guides
+## 📘 Document Types
 
-- Step-by-step instructions
-- Clear explanations
-- Screenshots/diagrams
-- Common use cases
-- Troubleshooting tips
+### 1. API Documentation
 
-#### 3. 🏗️ Architecture Documentation
+```mermaid
+graph TD
+    A[API Documentation] --> B[Functions]
+    A --> C[Classes]
+    A --> D[Modules]
+    B --> E[Parameters]
+    B --> F[Returns]
+    B --> G[Examples]
+    C --> H[Methods]
+    C --> I[Attributes]
+    C --> J[Usage]
+    D --> K[Overview]
+    D --> L[Components]
+    D --> M[Integration]
+```
+
+### 2. User Guides
+
+```mermaid
+flowchart TD
+    A[User Guide] --> B[Overview]
+    A --> C[Prerequisites]
+    A --> D[Installation]
+    A --> E[Usage]
+    A --> F[Examples]
+    A --> G[Troubleshooting]
+    E --> H[Basic]
+    E --> I[Advanced]
+    F --> J[Code]
+    F --> K[Output]
+```
+
+### 3. Architecture Documentation
 
 ```mermaid
 graph LR
-    A[Overview] --> B[Components]
-    B --> C[Interactions]
-    C --> D[Performance]
-    D --> E[Scaling]
+    A[Architecture] --> B[Overview]
+    B --> C[Components]
+    C --> D[Interactions]
+    D --> E[Performance]
+    E --> F[Scaling]
 ```
 
-- System overview
-- Component interactions
-- Design decisions
-- Performance considerations
-- Scaling guidelines
+### 4. Development Guides
 
-#### 4. 🛠️ Development Guides
-
-- Setup instructions
-- Workflow guidelines
-- Best practices
-- Code standards
-- Testing requirements
+```mermaid
+flowchart TD
+    A[Development] --> B[Setup]
+    A --> C[Workflow]
+    A --> D[Standards]
+    B --> E[Environment]
+    B --> F[Dependencies]
+    C --> G[Version Control]
+    C --> H[Testing]
+    D --> I[Style Guide]
+    D --> J[Best Practices]
+```
 
 ## ✨ Best Practices
 
@@ -215,6 +267,7 @@ When adding documentation:
 - Docstring parsers
 - Markdown linters
 - Link checkers
+- Diagram generators
 
 ### Style Guides
 
@@ -229,6 +282,8 @@ When adding documentation:
 - Markdown All in One
 - Python Docstring Generator
 - Code Spell Checker
+- Mermaid Preview
+- PlantUML
 
 ## 🔄 Maintenance
 
@@ -240,5 +295,35 @@ Regular documentation maintenance includes:
 4. Improving clarity
 5. Addressing feedback
 6. Version updates
+7. Diagram updates
+8. Screenshot updates
 
-Remember: Great documentation is the key to project adoption and user success! 🌟
+### Version Control for Documentation
+
+```mermaid
+flowchart LR
+    A[Write] --> B[Review]
+    B --> C[Update]
+    C --> D[Release]
+    D --> E[Maintain]
+    E --> A
+```
+
+### Documentation Review Checklist
+
+- [ ] Content is accurate and up-to-date
+- [ ] Examples are working and relevant
+- [ ] Links are valid
+- [ ] Images/diagrams are current
+- [ ] Code snippets follow style guide
+- [ ] Markdown formatting is correct
+- [ ] Table of contents is updated
+- [ ] Cross-references are valid
+
+Remember: Documentation is a living entity that requires regular care and updates to maintain its value! 🌟
+
+---
+
+![Documentation Overview](architecture/diagrams/documentation-overview.png)
+
+_Note: Keep this documentation updated as the project evolves. Good documentation is key to project success!_
