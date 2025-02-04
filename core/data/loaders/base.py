@@ -6,6 +6,8 @@ import torch
 from torch.utils.data import DataLoader, Dataset, Sampler
 from torch.utils.data.dataloader import default_collate
 
+from core.exceptions import DataLoadError, ConfigError
+
 
 class BaseDataLoaderConfig:
     """Configuration for data loaders."""
@@ -19,7 +21,7 @@ class BaseDataLoaderConfig:
         drop_last: bool = False,
         prefetch_factor: int = 2,
         persistent_workers: bool = True,
-        **kwargs
+        **kwargs,
     ):
         """Initialize loader configuration.
 
@@ -55,7 +57,7 @@ class BaseDataLoader(DataLoader):
         config: Optional[BaseDataLoaderConfig] = None,
         sampler: Optional[Sampler] = None,
         collate_fn: Optional[callable] = None,
-        **kwargs
+        **kwargs,
     ):
         """Initialize data loader.
 
@@ -65,28 +67,45 @@ class BaseDataLoader(DataLoader):
             sampler: Data sampler
             collate_fn: Function to collate samples
             **kwargs: Additional arguments passed to DataLoader
+
+        Raises:
+            DataLoadError: If dataset is invalid or initialization fails
+            ConfigError: If configuration is invalid
         """
-        if config is None:
-            config = BaseDataLoaderConfig()
+        if not isinstance(dataset, Dataset):
+            raise DataLoadError(
+                "Dataset must be an instance of torch.utils.data.Dataset"
+            )
 
-        if collate_fn is None:
-            collate_fn = self.default_collate
+        try:
+            if config is None:
+                config = BaseDataLoaderConfig()
 
-        super().__init__(
-            dataset=dataset,
-            batch_size=config.batch_size,
-            shuffle=config.shuffle if sampler is None else False,
-            sampler=sampler,
-            num_workers=config.num_workers,
-            collate_fn=collate_fn,
-            pin_memory=config.pin_memory,
-            drop_last=config.drop_last,
-            prefetch_factor=config.prefetch_factor,
-            persistent_workers=config.persistent_workers,
-            **kwargs
-        )
+            if collate_fn is None:
+                collate_fn = self.default_collate
 
-        self.config = config
+            if not isinstance(config, BaseDataLoaderConfig):
+                raise ConfigError("Config must be an instance of BaseDataLoaderConfig")
+
+            super().__init__(
+                dataset=dataset,
+                batch_size=config.batch_size,
+                shuffle=config.shuffle if sampler is None else False,
+                sampler=sampler,
+                num_workers=config.num_workers,
+                collate_fn=collate_fn,
+                pin_memory=config.pin_memory,
+                drop_last=config.drop_last,
+                prefetch_factor=config.prefetch_factor,
+                persistent_workers=config.persistent_workers,
+                **kwargs,
+            )
+
+            self.config = config
+        except Exception as e:
+            if isinstance(e, (DataLoadError, ConfigError)):
+                raise
+            raise DataLoadError(f"Failed to initialize data loader: {str(e)}")
 
     @staticmethod
     def default_collate(batch: list) -> Any:
@@ -136,6 +155,10 @@ def create_data_loader(dataset: Dataset, config: Dict[str, Any]) -> BaseDataLoad
     Returns:
         Configured data loader
 
+    Raises:
+        DataLoadError: If dataset is invalid or loader creation fails
+        ConfigError: If configuration is invalid
+
     Example config:
         {
             'batch_size': 32,
@@ -144,5 +167,17 @@ def create_data_loader(dataset: Dataset, config: Dict[str, Any]) -> BaseDataLoad
             'pin_memory': True
         }
     """
-    loader_config = BaseDataLoaderConfig(**config)
-    return BaseDataLoader(dataset, config=loader_config)
+    if not isinstance(dataset, Dataset):
+        raise DataLoadError("Dataset must be an instance of torch.utils.data.Dataset")
+
+    try:
+        loader_config = BaseDataLoaderConfig(**config)
+    except Exception as e:
+        raise ConfigError(f"Invalid configuration parameters: {str(e)}")
+
+    try:
+        return BaseDataLoader(dataset, config=loader_config)
+    except Exception as e:
+        if isinstance(e, (DataLoadError, ConfigError)):
+            raise
+        raise DataLoadError(f"Failed to create data loader: {str(e)}")
