@@ -1,278 +1,192 @@
 # Core Utilities 🛠️
 
-> Common utilities and tools for computer vision tasks
+> Common utility functions and tools for ML vision projects
 
 ## 📑 Table of Contents
 
 - [Overview](#overview)
 - [Directory Structure](#directory-structure)
-- [Utility Guidelines](#utility-guidelines)
-- [Categories of Utilities](#categories-of-utilities)
+- [Utilities](#utilities)
 - [Usage Examples](#usage-examples)
-- [Contributing Guidelines](#contributing-guidelines)
-- [Testing Requirements](#testing-requirements)
-- [Additional Resources](#additional-resources)
+- [Best Practices](#best-practices)
 
 ## Overview
 
-This directory contains common utility functions, helpers, and tools used across all vision projects.
+The utils/ module provides essential utility functions and tools used across the ML vision projects. These utilities handle common tasks like metric calculation, visualization, logging, and optimization.
 
 ## Directory Structure
 
 ```mermaid
-graph TD
-    A[utils] --> B[io]
-    A --> C[visualization]
-    A --> D[metrics]
-    A --> E[hardware]
-    A --> F[logging]
-    B --> G[image]
-    B --> H[video]
-    B --> I[dataset]
-    C --> J[detection]
-    C --> K[tracking]
-    C --> L[plots]
-    D --> M[detection]
-    D --> N[classification]
-    D --> O[tracking]
-    E --> P[gpu]
-    E --> Q[memory]
-    F --> R[experiment]
-    F --> S[monitoring]
+graph LR
+    A[utils/] --> B[metrics.py]
+    A --> C[visualization.py]
+    A --> D[logging.py]
+    A --> E[optimization.py]
 ```
 
 ```
 utils/
-├── io/                  # Input/Output utilities
-│   ├── image/          # Image reading/writing
-│   ├── video/          # Video handling
-│   └── dataset/        # Dataset management
-├── visualization/       # Visualization tools
-│   ├── detection/      # Detection visualization
-│   ├── tracking/       # Tracking visualization
-│   └── plots/          # Performance plots
-├── metrics/            # Evaluation metrics
-│   ├── detection/      # Detection metrics
-│   ├── classification/ # Classification metrics
-│   └── tracking/       # Tracking metrics
-├── hardware/           # Hardware utilities
-│   ├── gpu/           # GPU management
-│   └── memory/        # Memory management
-└── logging/           # Logging utilities
-    ├── experiment/    # Experiment logging
-    └── monitoring/    # Performance monitoring
+├── metrics.py        # Evaluation metrics and calculations
+├── visualization.py  # Plotting and visualization tools
+├── logging.py       # Logging and experiment tracking
+└── optimization.py  # Performance optimization utilities
 ```
 
-## 🔧 Utility Guidelines
+## Utilities
 
-### Code Organization
+### metrics.py
 
-```mermaid
-mindmap
-  root((Utility Design))
-    Modularity
-      Self-contained
-      Limited dependencies
-      Single responsibility
-    Documentation
-      Detailed docstrings
-      Usage examples
-      Type hints
-    Testing
-      Unit tests
-      Edge cases
-      Performance
-```
-
-Example utility function:
+Core metrics implementation for model evaluation:
 
 ```python
-from typing import Union, Tuple
-import numpy as np
-
-def resize_preserve_aspect(
-    image: np.ndarray,
-    target_size: Tuple[int, int],
-    padding_value: Union[int, Tuple[int, ...]] = 0
-) -> np.ndarray:
-    """Resize image preserving aspect ratio with padding.
-
-    Args:
-        image: Input image array
-        target_size: Desired output size (width, height)
-        padding_value: Value for padding
-
-    Returns:
-        Resized and padded image
-
-    Example:
-        >>> img = load_image("example.jpg")
-        >>> resized = resize_preserve_aspect(img, (224, 224))
-    """
-    # Implementation
-    ...
-```
-
-### ✨ Best Practices
-
-1. **🎯 Error Handling**
-
-```mermaid
-graph TD
-    A[Input] --> B{Valid?}
-    B -->|Yes| C[Process]
-    B -->|No| D[Error]
-    C --> E{Success?}
-    E -->|Yes| F[Return]
-    E -->|No| G[Handle]
-```
-
-- Validate inputs
-- Descriptive error messages
-- Proper exception types
-- Graceful fallbacks
-
-2. **⚡ Performance**
-
-   - Optimize common operations
-   - Cache when appropriate
-   - Profile critical paths
-   - Document characteristics
-
-3. **🧪 Testing**
-   - Unit test coverage
-   - Edge case handling
-   - Performance benchmarks
-   - Integration tests
-
-## 📦 Categories of Utilities
-
-### 🔄 IO Utilities
-
-```mermaid
-graph LR
-    A[Input] -->|Load| B[Process]
-    B -->|Save| C[Output]
-    B -->|Cache| D[Memory]
-```
-
-- Image loading/saving
-- Video reading/writing
-- Dataset management
-- Cache handling
-- Format conversion
-
-### 📊 Visualization
-
-- Bounding box drawing
-- Segmentation masks
-- Tracking trajectories
-- Performance plots
-- Interactive visualizations
-
-### 📈 Metrics
-
-```mermaid
-graph TD
-    A[Predictions] --> C[Metrics]
-    B[Ground Truth] --> C
-    C --> D[Analysis]
-    D --> E[Report]
-```
-
-- Standard metrics implementation
-- Custom metric utilities
-- Statistical analysis
-- Evaluation helpers
-
-### 🖥️ Hardware Management
-
-- GPU memory management
-- CPU/GPU synchronization
-- Memory optimization
-- Device selection
-
-### 📝 Logging
-
-- Experiment tracking
-- Performance monitoring
-- Debug logging
-- Progress tracking
-
-## 🚀 Usage Examples
-
-### Image Processing
-
-```python
-from core.utils.io import load_image
-from core.utils.visualization import draw_boxes
-
-# Load and process image
-image = load_image("example.jpg")
-boxes = detector.predict(image)
-visualized = draw_boxes(image, boxes)
-```
-
-### Metrics Calculation
-
-```python
-from core.utils.metrics import calculate_map
+from core.utils.metrics import (
+    calculate_accuracy,
+    calculate_precision_recall,
+    calculate_f1_score,
+    calculate_confusion_matrix
+)
 
 # Calculate metrics
-results = calculate_map(
-    predictions=pred_boxes,
-    ground_truth=gt_boxes,
-    iou_threshold=0.5
-)
+accuracy = calculate_accuracy(predictions, targets)
+precision, recall = calculate_precision_recall(predictions, targets)
+f1 = calculate_f1_score(precision, recall)
+conf_matrix = calculate_confusion_matrix(predictions, targets)
 ```
 
-### Hardware Management
+### visualization.py
+
+Tools for visualizing results and model outputs:
 
 ```python
-from core.utils.hardware import gpu_memory_info
+from core.utils.visualization import (
+    plot_training_curves,
+    plot_confusion_matrix,
+    plot_predictions,
+    save_visualization
+)
 
-# Monitor GPU usage
-memory_stats = gpu_memory_info()
-print(f"GPU Memory Used: {memory_stats['used_gb']:.2f} GB")
+# Create visualizations
+plot_training_curves(metrics_history)
+plot_confusion_matrix(conf_matrix)
+plot_predictions(images, predictions)
+save_visualization("results/", "training_curves.png")
 ```
 
-## 🤝 Contributing Guidelines
+### logging.py
 
-When adding new utilities:
+Logging utilities for experiment tracking:
 
-1. Follow existing directory structure
-2. Document thoroughly
-3. Include usage examples
-4. Add unit tests
-5. Consider performance
-6. Maintain compatibility
+```python
+from core.utils.logging import (
+    setup_logger,
+    log_metrics,
+    log_experiment,
+    save_config
+)
 
-## 🧪 Testing Requirements
+# Setup logging
+logger = setup_logger(__name__)
+log_metrics({"accuracy": 0.95, "loss": 0.1})
+log_experiment(experiment_name="training_run_1")
+save_config(config, "configs/experiment.yaml")
+```
 
-1. **Unit Tests**
+### optimization.py
 
-   - Test all public functions
-   - Cover edge cases
-   - Validate error handling
-   - Check performance
+Performance optimization tools:
 
-2. **Documentation**
+```python
+from core.utils.optimization import (
+    enable_mixed_precision,
+    optimize_memory_usage,
+    profile_performance,
+    benchmark_model
+)
 
-   - Clear docstrings
-   - Usage examples
-   - Parameter descriptions
-   - Return value specs
+# Optimize performance
+enable_mixed_precision()
+optimize_memory_usage(model)
+profile_performance(model, sample_input)
+benchmark_results = benchmark_model(model, dataloader)
+```
 
-3. **Performance**
-   - Benchmark critical utilities
-   - Profile memory usage
-   - Test with large inputs
-   - Document limitations
+## Usage Examples
 
-## 📚 Additional Resources
+### Comprehensive Evaluation
 
-- [NumPy Documentation](https://numpy.org/doc/stable/)
-- [OpenCV Python Tutorials](https://docs.opencv.org/4.x/d6/d00/tutorial_py_root.html)
-- [Python Performance Tips](https://wiki.python.org/moin/PythonSpeed/PerformanceTips)
+```python
+from core.utils.metrics import calculate_metrics
+from core.utils.visualization import plot_results
+from core.utils.logging import log_results
 
-Remember: Well-designed utilities make your code cleaner, faster, and more maintainable! 💪
+def evaluate_model(model, test_loader):
+    # Calculate metrics
+    metrics = calculate_metrics(model, test_loader)
+
+    # Visualize results
+    plots = plot_results(metrics)
+
+    # Log everything
+    log_results(metrics, plots)
+
+    return metrics
+```
+
+### Performance Monitoring
+
+```mermaid
+graph TD
+    A[Model Training] --> B[Log Metrics]
+    B --> C[Visualize Results]
+    C --> D[Save Reports]
+
+    B --> E[Track Memory]
+    B --> F[Monitor GPU]
+    B --> G[Profile Time]
+```
+
+## Best Practices
+
+### 1. Metrics
+
+- Use appropriate metrics for tasks
+- Implement error handling
+- Support batch processing
+- Enable custom metrics
+- Validate calculations
+
+### 2. Visualization
+
+- Create clear, labeled plots
+- Use consistent styling
+- Support various formats
+- Enable interactive plots
+- Save high-quality outputs
+
+### 3. Logging
+
+- Structure log messages
+- Include timestamps
+- Handle different log levels
+- Support multiple outputs
+- Enable/disable as needed
+
+### 4. Optimization
+
+- Profile before optimizing
+- Monitor resource usage
+- Benchmark improvements
+- Document optimizations
+- Consider trade-offs
+
+Remember: Good utilities improve development efficiency and code quality! 💪
+
+### Additional Resources
+
+- [Metrics Documentation](docs/metrics.md)
+- [Visualization Guide](docs/visualization.md)
+- [Logging Best Practices](docs/logging.md)
+- [Optimization Tips](docs/optimization.md)
+
+![Utility Functions Overview](docs/images/utils_overview.png)
+_Placeholder: Insert diagram showing the relationship between utility functions_
