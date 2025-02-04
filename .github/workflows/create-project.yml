@@ -209,12 +209,11 @@ jobs:
           project_dir="projects/${{ env.formatted_name }}"
           cd "$project_dir"
 
-          # Initialize Git in the project directory
-          git init
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
+          # Configure Git for the actions bot
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
 
-          # Initialize DVC
+          # Initialize DVC in subdirectory mode
           dvc init --subdir
 
           # Configure DVC
@@ -229,6 +228,18 @@ jobs:
           EOF
 
           dvc add data/raw/
+
+      - name: Add and Commit Changes
+        shell: bash
+        run: |
+          # Return to repository root
+          cd "$GITHUB_WORKSPACE"
+
+          # Add all files in the project directory
+          git add "projects/${{ env.formatted_name }}"
+
+          # Create commit
+          git commit -m "feat(project): Initialize ${{ env.formatted_name }} project"
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
