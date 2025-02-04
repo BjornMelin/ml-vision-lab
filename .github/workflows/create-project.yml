@@ -1,4 +1,10 @@
 name: Create New Project
+
+# Add permissions configuration
+permissions:
+  contents: write
+  pull-requests: write
+
 on:
   workflow_dispatch:
     inputs:
