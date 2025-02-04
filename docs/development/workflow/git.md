@@ -262,6 +262,28 @@ flowchart TD
 
 ## Examples
 
+### Project Creation
+
+```bash
+# Using GitHub Actions
+1. Navigate to Actions tab
+2. Select "Create New Project" workflow
+3. Click "Run workflow"
+4. Fill in parameters:
+   - project_name: "semantic-segmentation"
+   - project_description: "Deep learning model for semantic segmentation"
+   - version: "0.1.0"
+5. Review and merge the created PR
+
+# The workflow will:
+# - Create standardized project structure
+# - Set up Git and DVC
+# - Configure dependencies
+# - Create initial documentation
+```
+
+For detailed instructions, see [Creating New Projects](../../guides/getting-started/create-project.md)
+
 ### Feature Development
 
 ```bash

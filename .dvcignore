@@ -1,0 +1,78 @@
+# Temporary files and caches
+*.tmp
+.temp/
+.cache/
+__pycache__/
+*.pyc
+.hypothesis/
+
+# Development artifacts
+.ipynb_checkpoints/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Model development
+wandb/
+mlruns/
+lightning_logs/
+tensorboard/
+runs/
+.neptune/
+comet_ml/
+mlflow/
+
+# Training artifacts
+checkpoints/
+*.ckpt
+*.pth
+*.pt
+*.h5
+*.hdf5
+*.keras
+*.tflite
+*.onnx
+*.weights
+saved_models/
+model_weights/
+
+# Generated data and features
+processed_features/
+embeddings/
+predictions/
+*.npz
+*.npy
+*.pkl
+*.parquet
+*.arrow
+*.feather
+
+# Experiment outputs
+results/
+plots/
+figures/
+visualizations/
+evaluation/
+analysis/
+output/
+
+# Profiling and debugging
+*.prof
+*.stats
+*.trace
+*.log
+profiler/
+debug/
+
+# Temporary experiment files
+scratch/
+tmp/
+temp/
+
+# Large files and archives
+*.tar
+*.gz
+*.zip
+*.7z
+*.rar

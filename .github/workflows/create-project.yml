@@ -1,4 +1,10 @@
 name: Create New Project
+
+# Add permissions configuration
+permissions:
+  contents: write
+  pull-requests: write
+
 on:
   workflow_dispatch:
     inputs:
@@ -26,42 +32,86 @@ jobs:
         id: format-name
         shell: bash
         run: |
+          # Store and debug project name
+          project_name="${{ github.event.inputs.project_name }}"
+          # Trim whitespace
+          project_name="${project_name#"${project_name%%[![:space:]]*}"}"
+          project_name="${project_name%"${project_name##*[![:space:]]}"}"
+
+          # Check if empty after trim
+          if [ -z "$project_name" ]; then
+            echo "Error: Project name cannot be empty"
+            exit 1
+          fi
+
+          echo "Project name (after trim): '$project_name'"
+          echo "Length: ${#project_name}"
+          echo "First character: '${project_name:0:1}'"
+          echo "Hexdump of project name:"
+          echo -n "$project_name" | xxd
+          # Validate project name
+          regex='^[[:alnum:]][-[:alnum:]._[:space:]]*$'
+          echo "Using regex pattern: $regex"
+          if [[ ! "$project_name" =~ $regex ]]; then
+            echo "Error: Project name must start with alphanumeric and contain only letters, numbers, spaces, hyphens, underscores, or dots"
+            echo "Project name validation failed"
+            echo "Regex match result: $?"
+            exit 1
+          fi
+          echo "Project name validation passed"
+
           # Convert to lowercase, replace spaces/underscores with hyphens, remove invalid chars
-          formatted_name=$(echo "${{ github.event.inputs.project_name }}" | \
+          formatted_name=$(echo "$project_name" | \
             tr '[:upper:]' '[:lower:]' | \
             sed 's/[^a-z0-9]/-/g' | \
             sed 's/-\+/-/g' | \
             sed 's/^-\|-$//g')
-          
-          echo "Formatted project name: $formatted_name"
-          echo "formatted_name=$formatted_name" >> $GITHUB_ENV
-          
-          # Validate version format
-          if [[ ! "${{ github.event.inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Error: Version must be in format X.Y.Z where X, Y, and Z are numbers"
-            echo "Example: 0.1.0, 1.0.0, 2.3.1"
+
+          # Validate formatted name is not empty
+          if [ -z "$formatted_name" ]; then
+            echo "Error: Formatted project name is empty after processing"
             exit 1
           fi
+
+          echo "Formatted project name: '$formatted_name'"
+          # Use GitHub Actions environment file commands
+          {
+            echo "formatted_name=$formatted_name"
+            echo "formatted_name=$formatted_name" >> "$GITHUB_OUTPUT"
+          } >> "$GITHUB_ENV"
+
+          # Store and validate version
+          version="${{ github.event.inputs.version }}"
+          echo "Version: '$version'"
+
+          # Validate version format
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Version must be in format X.Y.Z where X, Y, and Z are numbers"
+            echo "Example: 0.1.0, 1.0.0, 2.3.1"
+            echo "Got version: '$version'"
+            exit 1
+          fi
+          echo "Version validation passed"
 
       - name: Create Project Structure
         shell: bash
         run: |
           project_dir="projects/${{ env.formatted_name }}"
-          
+
           # Create main project directories
           mkdir -p "$project_dir"/src/{data,models,utils}
-          mkdir -p "$project_dir"/scripts
+          mkdir -p "$project_dir"/scripts/utils
           mkdir -p "$project_dir"/notebooks/{exploration,modeling,evaluation}
-          mkdir -p "$project_dir"/experiments/{runs,models,results}
-          mkdir -p "$project_dir"/artifacts/{temp,cache,debug}
+          mkdir -p "$project_dir"/experiments/{runs/{baseline,improved},models,results}
+          mkdir -p "$project_dir"/artifacts/{predictions,checkpoints,logs}
           mkdir -p "$project_dir"/docs/{api,guides}
-          mkdir -p "$project_dir"/ui/streamlit/pages
+          mkdir -p "$project_dir"/ui/{streamlit/pages,static}
           mkdir -p "$project_dir"/tests
-          mkdir -p "$project_dir"/configs
-          
+          mkdir -p "$project_dir"/configs/experiments
+
           # Create data directories
           mkdir -p "$project_dir"/data/{raw,processed}
-          
+
           # Create placeholder files
           touch "$project_dir"/data/raw/.gitkeep
           touch "$project_dir"/data/processed/.gitkeep
@@ -73,62 +123,201 @@ jobs:
         shell: bash
         run: |
           project_dir="projects/${{ env.formatted_name }}"
-          
-          # Create dataset.py
-          cat << 'DATASETEOF' > "$project_dir/src/data/dataset.py"
-          from typing import Any
 
-          class Dataset:
-              def __init__(self) -> None:
-                  pass
-                  
-              def __getitem__(self, index: int) -> Any:
-                  pass
-                  
-              def __len__(self) -> int:
-                  pass
-          DATASETEOF
-
-          # Create model.py
-          cat << 'MODELEOF' > "$project_dir/src/models/model.py"
-          import torch.nn as nn
-
-          class Model(nn.Module):
-              def __init__(self):
-                  super().__init__()
-                  
-              def forward(self, x):
-                  return x
-          MODELEOF
-
-          # Create train.py
-          cat << 'TRAINEOF' > "$project_dir/scripts/train.py"
+          # Create Python files
+          cat > "$project_dir/scripts/evaluate.py" << 'EOF'
           from pathlib import Path
           import sys
+          import torch
+          import yaml
+
+          project_root = Path(__file__).parent.parent
+          sys.path.append(str(project_root))
+
+          from src.models.model import Model
+          from src.data.utils import create_dataloaders
+          from src.utils.metrics import accuracy, top_k_accuracy
+
+          def evaluate():
+              # Load config
+              with open("configs/train.yaml", "r") as f:
+                  config = yaml.safe_load(f)
+
+              # Load model
+              model = Model(num_classes=config["model"]["num_classes"])
+              model.load("experiments/models/model.pt")
+              model.eval()
+
+              # Create dataloader
+              dataloaders = create_dataloaders(
+                  config["data"]["root"],
+                  batch_size=config["train"]["batch_size"]
+              )
+              val_loader = dataloaders['val']
+
+              # Evaluate
+              total_acc = 0
+              total_samples = 0
+              with torch.no_grad():
+                  for data, target in val_loader:
+                      output = model(data)
+                      acc = accuracy(output, target)
+                      total_acc += acc * len(target)
+                      total_samples += len(target)
+
+              print(f"Validation Accuracy: {total_acc/total_samples:.4f}")
+
+          if __name__ == "__main__":
+              evaluate()
+          EOF
+
+          cat > "$project_dir/scripts/predict.py" << 'EOF'
+          from pathlib import Path
+          import sys
+          import torch
+          import yaml
+          from PIL import Image
+          import torchvision.transforms as T
 
           # Add project root to path
           project_root = Path(__file__).parent.parent
           sys.path.append(str(project_root))
 
           from src.models.model import Model
-          from src.data.dataset import Dataset
 
-          def train():
-              model = Model()
-              # Add training logic here
-              pass
+          def predict(image_path: str):
+              # Load config
+              with open("configs/train.yaml", "r") as f:
+                  config = yaml.safe_load(f)
 
-          if __name__ == '__main__':
-              train()
-          TRAINEOF
+              # Load model
+              model = Model(num_classes=config["model"]["num_classes"])
+              model.load("experiments/models/model.pt")
+              model.eval()
 
-      - name: Create Project Configuration
+              # Load and preprocess image
+              transform = T.Compose([
+                  T.Resize(256),
+                  T.CenterCrop(224),
+                  T.ToTensor(),
+                  T.Normalize(mean=[0.485, 0.456, 0.406],
+                            std=[0.229, 0.224, 0.225])
+              ])
+
+              image = Image.open(image_path).convert('RGB')
+              input_tensor = transform(image).unsqueeze(0)
+
+              # Predict
+              with torch.no_grad():
+                  output = model(input_tensor)
+                  probabilities = torch.softmax(output, dim=1)
+                  predicted_class = torch.argmax(probabilities).item()
+
+              return predicted_class, probabilities[0]
+
+          if __name__ == "__main__":
+              import argparse
+              parser = argparse.ArgumentParser()
+              parser.add_argument("image_path", help="Path to input image")
+              args = parser.parse_args()
+
+              class_id, probs = predict(args.image_path)
+              print(f"Predicted class: {class_id}")
+              print(f"Probabilities: {probs}")
+          EOF
+
+          cat > "$project_dir/tests/conftest.py" << 'EOF'
+          import pytest
+          import torch
+
+          @pytest.fixture
+          def sample_batch():
+              return {
+                  'input': torch.randn(4, 3, 224, 224),
+                  'target': torch.randint(0, 10, (4,))
+              }
+          EOF
+
+          cat > "$project_dir/tests/test_data.py" << 'EOF'
+          import pytest
+          from src.data.dataset import ImageDataset
+
+          def test_dataset_loading():
+              dataset = ImageDataset("data/test")
+              assert len(dataset) > 0
+              
+              sample = dataset[0]
+              assert isinstance(sample, tuple)
+              assert len(sample) == 2
+          EOF
+
+          cat > "$project_dir/tests/test_models.py" << 'EOF'
+          import pytest
+          import torch
+          from src.models.model import Model
+
+          def test_model_forward(sample_batch):
+              model = Model(num_classes=10)
+              outputs = model(sample_batch['input'])
+              assert outputs.shape == (4, 10)
+          EOF
+
+          cat > "$project_dir/ui/streamlit/app.py" << 'EOF'
+          import streamlit as st
+          import torch
+          from pathlib import Path
+          import sys
+
+          project_root = Path(__file__).parent.parent.parent
+          sys.path.append(str(project_root))
+
+          from src.models.model import Model
+          from PIL import Image
+          import torchvision.transforms as T
+
+          def main():
+              st.title("Image Classification Demo")
+              
+              uploaded_file = st.file_uploader("Choose an image...")
+              if uploaded_file is not None:
+                  # Load image
+                  image = Image.open(uploaded_file).convert('RGB')
+                  st.image(image, caption='Uploaded Image', use_column_width=True)
+                  
+                  # Load model and transform
+                  model = Model(num_classes=10)
+                  model.load("experiments/models/model.pt")
+                  model.eval()
+                  
+                  transform = T.Compose([
+                      T.Resize(256),
+                      T.CenterCrop(224),
+                      T.ToTensor(),
+                      T.Normalize(mean=[0.485, 0.456, 0.406],
+                                std=[0.229, 0.224, 0.225])
+                  ])
+                  
+                  # Make prediction
+                  input_tensor = transform(image).unsqueeze(0)
+                  with torch.no_grad():
+                      output = model(input_tensor)
+                      probabilities = torch.softmax(output, dim=1)
+                      predicted_class = torch.argmax(probabilities).item()
+                  
+                  st.write(f"Predicted Class: {predicted_class}")
+                  st.write(f"Confidence: {probabilities[0][predicted_class]:.2%}")
+
+          if __name__ == "__main__":
+              main()
+          EOF
+
+      - name: Create Configuration Files
         shell: bash
         run: |
           project_dir="projects/${{ env.formatted_name }}"
-          
+
           # Create pyproject.toml
-          cat << EOF > "$project_dir/pyproject.toml"
+          cat > "$project_dir/pyproject.toml" << 'EOF'
           [tool.poetry]
           name = "${{ env.formatted_name }}"
           version = "${{ github.event.inputs.version }}"
@@ -136,54 +325,66 @@ jobs:
 
           [tool.poetry.dependencies]
           python = "^3.11"
-          torch = "^2.3.0"
-          opencv-python = "^5.0.0"
+          torch = "^2.1.0"
+          torchvision = "^0.16.0"
+          numpy = "^1.26.4"
+          pyyaml = "^6.0.1"
+          pillow = "^10.1.0"
 
           [tool.poetry.group.ui.dependencies]
-          streamlit = "^1.32.0"
-          gradio = "^4.19.0"
+          streamlit = "^1.29.2"
 
           [tool.poetry.group.dev.dependencies]
-          pytest = "^7.0.0"
-          black = "^23.0.0"
+          pytest = "^7.4.3"
+          black = "^24.1.0"
           dvc = "^3.0.0"
           EOF
 
-          # Create .gitignore
-          cat << 'EOF' > "$project_dir/.gitignore"
-          artifacts/
-          *.pyc
-          __pycache__/
-          .ipynb_checkpoints
-          .env
-          .dvc/cache
-          .dvc/tmp
+          # Create configs
+          cat > "$project_dir/configs/model.yaml" << 'EOF'
+          num_classes: 10
           EOF
 
-          # Create .dvcignore
-          cat << 'EOF' > "$project_dir/.dvcignore"
-          artifacts/
-          *.pyc
-          __pycache__/
-          .ipynb_checkpoints
+          cat > "$project_dir/configs/data.yaml" << 'EOF'
+          root: data
+          batch_size: 32
+          num_workers: 4
+          EOF
+
+          cat > "$project_dir/configs/train.yaml" << 'EOF'
+          model:
+            num_classes: 10
+
+          data:
+            root: data
+            batch_size: 32
+            num_workers: 4
+
+          train:
+            epochs: 100
+            lr: 0.001
           EOF
 
           # Create .env.example
-          cat << 'EOF' > "$project_dir/.env.example"
-          # Model parameters
+          cat > "$project_dir/.env.example" << 'EOF'
+          # Model Configuration
           MODEL_NAME=model-v1
+          NUM_CLASSES=10
+
+          # Training Parameters
           BATCH_SIZE=32
           NUM_WORKERS=4
+          LEARNING_RATE=0.001
+          NUM_EPOCHS=100
+          DEVICE=cuda
 
-          # Storage configuration
+          # Data and Storage
           DATA_DIR=data
           ARTIFACTS_DIR=artifacts
           DVC_REMOTE=s3://bucket/path
 
-          # Training parameters
-          LEARNING_RATE=0.001
-          NUM_EPOCHS=100
-          DEVICE=cuda
+          # UI Configuration
+          STREAMLIT_PORT=8501
           EOF
 
       - name: Create README
@@ -191,12 +392,75 @@ jobs:
         run: |
           project_dir="projects/${{ env.formatted_name }}"
           readme_template="projects/README-template.md"
-          # Use printf to properly escape special characters in the description
-          description=$(printf '%s\n' "${{ github.event.inputs.project_description }}" | sed 's/[\/&]/\\&/g')
-          sed -e "s/\[Project Name\]/${{ env.formatted_name }}/" \
-              -e "s/\[Brief project description\]/$description/" \
-              -e "s/\[Your Name\]/Generated via GitHub Actions/" \
-              "$readme_template" > "$project_dir/README.md"
+
+          if [ ! -f "$readme_template" ]; then
+            echo "README template not found, creating default README"
+            cat > "$project_dir/README.md" << 'EOF'
+          # ${{ env.formatted_name }}
+
+          ${{ github.event.inputs.project_description }}
+
+          ## Overview
+
+          This is a machine learning project generated via GitHub Actions.
+
+          ## Setup
+
+          1. Install dependencies:
+             ```bash
+             poetry install
+             ```
+
+          2. Set up environment variables:
+             ```bash
+             cp .env.example .env
+             ```
+
+          3. Initialize DVC:
+             ```bash
+             dvc init
+             ```
+
+          ## Usage
+
+          1. Train the model:
+             ```bash
+             python scripts/train.py
+             ```
+
+          2. Evaluate the model:
+             ```bash
+             python scripts/evaluate.py
+             ```
+
+          3. Run the UI:
+             ```bash
+             streamlit run ui/streamlit/app.py
+             ```
+
+          ## Project Structure
+
+          - `src/`: Source code
+          - `scripts/`: Training and evaluation scripts
+          - `notebooks/`: Jupyter notebooks
+          - `tests/`: Unit tests
+          - `configs/`: Configuration files
+          - `data/`: Dataset files (managed by DVC)
+          - `experiments/`: Experiment tracking
+          - `artifacts/`: Model artifacts and logs
+          - `ui/`: Web interface
+
+          ## License
+
+          MIT
+          EOF
+          else
+            description=$(printf '%s\n' "${{ github.event.inputs.project_description }}" | sed 's/[\/&]/\\&/g')
+            sed -e "s/\[Project Name\]/${{ env.formatted_name }}/" \
+                -e "s/\[Brief project description\]/$description/" \
+                -e "s/\[Your Name\]/Generated via GitHub Actions/" \
+                "$readme_template" > "$project_dir/README.md"
+          fi
 
       - name: Install DVC
         run: |
@@ -207,12 +471,25 @@ jobs:
         shell: bash
         run: |
           project_dir="projects/${{ env.formatted_name }}"
+
+          # Check if project directory exists
+          if [ ! -d "$project_dir" ]; then
+            echo "Error: Project directory does not exist"
+            exit 1
+          fi
+
           cd "$project_dir"
-          dvc init
-          
+
+          # Configure Git for the actions bot
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+          # Initialize DVC in subdirectory mode
+          dvc init --subdir
+
           # Configure DVC
           mkdir -p .dvc
-          cat << 'EOF' > .dvc/config
+          cat > .dvc/config << 'EOF'
           [core]
               remote = storage
               autostage = true
@@ -220,8 +497,25 @@ jobs:
               type = "hardlink,symlink"
               dir = .dvc/cache
           EOF
-          
-          dvc add data/raw/
+
+          # Check if data/raw directory exists before adding to DVC
+          if [ -d "data/raw" ]; then
+            dvc add data/raw/
+          else
+            echo "Warning: data/raw directory not found, skipping DVC add"
+          fi
+
+      - name: Add and Commit Changes
+        shell: bash
+        run: |
+          # Return to repository root
+          cd "$GITHUB_WORKSPACE"
+
+          # Add changes
+          git add "projects/${{ env.formatted_name }}"
+
+          # Create commit
+          git commit -m "feat(project): Initialize ${{ env.formatted_name }} project"
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
@@ -229,18 +523,18 @@ jobs:
           title: "feat(project): Initialize ${{ env.formatted_name }} project"
           commit-message: "feat(project): Initialize ${{ env.formatted_name }} project structure"
           branch: "feat/${{ github.event.inputs.version }}/init-${{ env.formatted_name }}"
-          base: "dev"  # Specify dev as the base branch
+          base: "dev" # Specify dev as the base branch
           delete-branch: true
           body: |
             This PR initializes a new ML/CV project: **${{ env.formatted_name }}**
-            
+
             ## Description
             ${{ github.event.inputs.project_description }}
-            
+
             ## Project Structure
             - Created standard ML project structure following best practices
             - Initialized basic Python files and configurations
             - Set up DVC for data version control
             - Added essential configuration files
-            
+
             Please review the project structure and configuration files.

@@ -7,7 +7,6 @@ __pycache__/
 build/
 develop-eggs/
 dist/
-downloads/
 eggs/
 .eggs/
 lib/
@@ -20,165 +19,177 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual Environment
+# Virtual Environments
 .env
 .venv
 env/
 venv/
 ENV/
 .python-version
+.conda/
+conda-env/
+poetry.lock
 
-# IDE
+# IDE and Editor Files
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
 .project
-.pydevproject
 .settings/
+.classpath
+.factorypath
+*.sublime-workspace
+*.sublime-project
 
-# Jupyter Notebook
+# Jupyter
 .ipynb_checkpoints
 *.ipynb
 !notebooks/**/*.ipynb
-!experiments/notebooks/**/*.ipynb
+!docs/**/*.ipynb
 
-# ML-specific
-data/**/raw/
-data/**/processed/
-data/**/interim/
-data/**/external/
-!data/**/.gitkeep
-
-# Model files
-*.pt
-*.pth
-*.pb
-*.onnx
-*.trt
-*.weights
-*.engine
-*.pkl
-artifacts/
-*/checkpoints/
-runs/
-outputs/
-
-# ML experiments and logs
-mlruns/
-wandb/
-logs/
-tensorboard/
-lightning_logs/
-*.log
-experiments/runs/**/
-!experiments/runs/**/*.py
-!experiments/runs/**/*.yaml
-!experiments/runs/**/README.md
-
-# DVC
+# Data Version Control
 .dvc/
 *.dvc.lock
 /dvc.yaml
 /dvc.lock
+/data
 
-# Environment
-.env
-.env.*
-!.env.example
-conda-env.yaml
-
-# UI specific
-ui/**/node_modules/
-ui/**/.streamlit/secrets.toml
-ui/**/dist/
-ui/**/build/
-ui/**/*.pyc
-ui/**/__pycache__/
-ui/**/.cache/
-ui/**/static/generated/
-ui/streamlit/.streamlit/secrets.toml
-
-# Static files & media
-*.jpg
-*.jpeg
-*.png
-*.gif
-*.ico
-*.mov
-*.mp4
-*.wmv
-*.avi
-*.mpg
-!ui/static/**
-!docs/images/**
-!ui/**/assets/**
-
-# Large files & datasets
-*.hdf5
+# ML Training and Model Files
+models/
+saved_models/
+checkpoints/
+*.pt
+*.pth
 *.h5
+*.hdf5
+*.pb
+*.onnx
+*.tflite
+*.keras
+*.weights
+*.engine
 *.pkl
-*.npz
-*.npy
-*.tfrecord
+*.joblib
+
+# Experiment Tracking
+mlruns/
+wandb/
+tensorboard/
+lightning_logs/
+neptune/
+aim/
+logs/
+runs/
+
+# Generated Data and Features
+data/**/raw/
+data/**/processed/
+data/**/interim/
+data/**/external/
+data/**/features/
+!data/**/.gitkeep
+embeddings/
+predictions/
+*.tfrecords
+*.record
+*.mindrecord
+*.seq
+*.lst
+
+# Training Outputs
+results/
+output/
+experiments/**/
+!experiments/**/*.py
+!experiments/**/*.yaml
+!experiments/**/README.md
+artifacts/
+
+# Analysis and Visualization
+figures/
+plots/
+visualizations/
+metrics/
+evaluation/
+
+# Large Files and Datasets
 *.csv
+*.tsv
 *.json
+*.jsonl
 *.parquet
 *.arrow
 *.feather
 *.sqlite
 *.db
+*.hdf5
+*.h5
+*.npz
+*.npy
+*.mmap
+*.idx
+*.bin
+*.vec
+*.fasttext
 
-# Dataset-specific
-*.VOC
-*.COCO
+# Compressed Files
 *.zip
 *.tar
 *.gz
+*.bz2
 *.7z
 *.rar
+*.xz
+*.zst
 
-# CUDA
-*.i
-*.ii
-*.gpu
-*.ptx
-*.cubin
-*.fatbin
+# Media Files
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.svg
+*.ico
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+!docs/images/**
+!assets/**
+!ui/static/**
 
-# Profiling
-*.prof
-*.stats
-*.trace
-*.profile
-*.nvvp
-
-# Documentation builds
+# Documentation
 docs/_build/
-site/
+docs/_static/
+docs/_templates/
 _site/
 .docz/
 .sphinx/
+site/
 
-# Test coverage
+# Testing and Coverage
 .coverage
 coverage.xml
-htmlcov/
 .pytest_cache/
+htmlcov/
 .tox/
 .nox/
 
-# Poetry
-poetry.lock
-
-# Operating System
+# System and Temporary Files
 .DS_Store
 Thumbs.db
-*.swp
 *.bak
+*.tmp
+*.temp
+*.swp
+*.swo
 *~
 Desktop.ini
 $RECYCLE.BIN/
 .directory
 
+# repomix
 repomix-output.txt
