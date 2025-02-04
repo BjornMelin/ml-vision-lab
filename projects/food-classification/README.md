@@ -1,197 +1,218 @@
-# food-classification
+# Food-101 Classification Project
 
-> Brief description of the ML/CV project and its objectives
+> An end-to-end deep learning solution for classifying food images using PyTorch, with MLflow experiment tracking and a Streamlit interface.
 
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
-[![PyTorch](https://img.shields.io/badge/pytorch-2.3%2B-red.svg)](https://pytorch.org/)
-[![DVC](https://img.shields.io/badge/dvc-3.30%2B-violet.svg)](https://dvc.org/)
-[![MLflow](https://img.shields.io/badge/mlflow-2.10%2B-yellow.svg)](https://mlflow.org/)
+[![PyTorch](https://img.shields.io/badge/pytorch-2.1.0-red.svg)](https://pytorch.org/)
+[![DVC](https://img.shields.io/badge/dvc-3.36.1-violet.svg)](https://dvc.org/)
+[![MLflow](https://img.shields.io/badge/mlflow-2.11.3-yellow.svg)](https://mlflow.org/)
+[![Streamlit](https://img.shields.io/badge/streamlit-1.29.2-green.svg)](https://streamlit.io/)
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Features](#features)
+3. [Architecture](#architecture)
+4. [Installation](#installation)
+   - [Prerequisites](#prerequisites)
+   - [Setup Steps](#setup-steps)
+   - [Dataset Setup](#dataset-setup)
+5. [Usage Guide](#usage-guide)
+   - [Training](#training)
+   - [Inference](#inference)
+   - [Web Interface](#web-interface)
+6. [Project Structure](#project-structure)
+7. [Technical Details](#technical-details)
+   - [Model Architecture](#model-architecture)
+   - [Data Pipeline](#data-pipeline)
+   - [Training Pipeline](#training-pipeline)
+   - [Web Interface](#web-interface-1)
+8. [Development](#development)
+   - [Contributing](#contributing)
+   - [Testing](#testing)
+9. [Resources](#resources)
 
 ## Overview
 
-This project provides a complete, reproducible pipeline for training and deploying a food classification model using the Food-101 dataset. It leverages PyTorch (with timm) for model development, Hydra for flexible configuration, and integrates DVC for data/model versioning alongside MLflow for experiment tracking. A Streamlit UI offers an intuitive interface for uploading images and visualizing classification results in real time.
+The Food-101 Classification Project demonstrates best practices in deep learning development through a complete, reproducible pipeline for food image classification. It combines modern tools and frameworks to create an efficient workflow for training, evaluating, and deploying models.
 
-## Quick Start
+## Features
+
+- 🚀 **EfficientNetV2** backbone with transfer learning
+- 📊 Comprehensive experiment tracking with **MLflow**
+- 🗄️ Data versioning using **DVC**
+- ⚡ Interactive web interface with **Streamlit**
+- 🔧 Modular configuration using **Hydra**
+- 📈 Real-time training visualization
+
+## Architecture
+
+```mermaid
+graph TB
+    A[Food-101 Dataset] -->|DVC| B[Data Pipeline]
+    B -->|PyTorch DataLoader| C[Training Pipeline]
+    C -->|MLflow Tracking| D[Experiment Logs]
+    C -->|Model Checkpoints| E[Trained Model]
+    E -->|Load| F[Streamlit UI]
+    F -->|User Upload| G[Prediction]
+    G -->|Grad-CAM| H[Visualization]
+```
+
+## Installation
+
+### Prerequisites
+
+- Python 3.11 or higher
+- CUDA-capable GPU (recommended)
+- [Git LFS](https://git-lfs.github.com/) for model storage
+- [DVC](https://dvc.org/) for data versioning
+
+### Setup Steps
 
 ```bash
-# Clone project
-git clone https://github.com/username/project.git
-cd project
+# Clone repository
+git clone https://github.com/username/food-classification.git
+cd food-classification
 
-# Set up environment
-cp .env.example .env  # Edit with your settings
-poetry install       # or: pip install -r requirements.txt
+# Create virtual environment
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
-# Download data
-dvc pull
-
-# Train model
-python scripts/train.py
+# Install dependencies
+pip install -r requirements/base.txt
+pip install -r requirements/ui.txt
+pip install -r requirements/dev.txt
 ```
+
+### Dataset Setup
+
+```bash
+# Download Food-101 dataset
+mkdir -p data/raw/food-101
+# Download from https://data.vision.ee.ethz.ch/cvl/food-101.tar.gz
+
+# Initialize DVC and track dataset
+dvc init
+dvc add data/raw/food-101
+git add data/raw/food-101.dvc .gitignore
+git commit -m "Add Food-101 dataset"
+```
+
+## Usage Guide
+
+### Training
+
+```bash
+# Start training with default configuration
+python scripts/train.py
+
+# Override hyperparameters
+python scripts/train.py model.architecture=tf_efficientnetv2_m model.optimizer.lr=0.0005
+```
+
+### Inference
+
+```bash
+# Single image prediction
+python scripts/predict.py --input_path path/to/image.jpg --checkpoint path/to/model.pth
+
+# Batch prediction
+python scripts/predict.py --input_dir path/to/images --output_dir predictions
+```
+
+### Web Interface
+
+```bash
+# Launch Streamlit app
+streamlit run ui/streamlit/app.py
+```
+
+![Streamlit Interface](docs/images/streamlit-ui.png)
 
 ## Project Structure
 
 ```
-.
-├── scripts/          # Execution scripts
-│   ├── train.py     # Training entry point
-│   ├── evaluate.py  # Evaluation script
-│   ├── predict.py   # Inference script
-│   └── utils/       # Script utilities
-├── configs/         # Configuration files
-│   ├── model.yaml   # Model architecture
-│   ├── data.yaml    # Data processing
-│   ├── train.yaml   # Training parameters
-│   └── experiments/ # Experiment configs
-├── data/           # Dataset files (DVC-tracked)
-│   ├── raw/        # Original data
-│   │   ├── train/  # Training data
-│   │   ├── val/    # Validation data
-│   │   └── test/   # Test data
-│   └── processed/  # Processed data
-├── src/            # Source code
-│   ├── data/       # Data processing
-│   │   ├── dataset.py
-│   │   ├── transforms.py
-│   │   └── utils.py
-│   ├── models/     # Model implementations
-│   │   ├── model.py
-│   │   ├── layers.py
-│   │   └── heads/  # Model heads
-│   └── utils/      # Utilities
-│       ├── metrics.py
-│       ├── visualization.py
-│       └── logging.py
-├── notebooks/      # Jupyter notebooks
-│   ├── exploration/# Data exploration
-│   ├── modeling/   # Model prototyping
-│   └── evaluation/ # Model evaluation
-├── ui/             # User interface code
-│   ├── streamlit/  # Streamlit interface
-│   │   ├── app.py  # Main app
-│   │   ├── pages/  # App pages
-│   │   └── assets/ # UI resources
-│   └── static/     # Shared assets
-├── experiments/    # Experiment tracking
-│   ├── runs/       # MLflow/experiment runs
-│   │   ├── baseline/
-│   │   └── improved/
-│   ├── models/     # Trained models (DVC-tracked)
-│   └── results/    # Evaluation results (DVC-tracked)
-├── tests/          # Testing suite
-│   ├── conftest.py # Test configuration
-│   ├── test_data.py
-│   ├── test_models.py
-│   └── test_utils.py
-├── docs/           # Documentation
-│   ├── index.md    # Documentation home
-│   ├── api/        # API documentation
-│   └── guides/     # User guides
-├── artifacts/      # Temporary outputs (not tracked)
-│   ├── predictions/# Model predictions
-│   ├── checkpoints/# Training checkpoints
-│   └── logs/      # Training logs
-├── .dvc/          # DVC configuration
-│   ├── cache/     # DVC cache (auto-managed)
-│   ├── tmp/       # DVC temporary files
-│   └── config     # DVC settings
-├── .dvcignore     # DVC ignore patterns
-├── .env.example   # Environment variables template
-└── .gitignore     # Git ignore patterns
+food-classification/
+├── src/                # Source code
+│   ├── data/          # Data processing
+│   ├── models/        # Model implementations
+│   └── utils/         # Utility functions
+├── configs/           # Hydra configurations
+├── scripts/           # Training/inference scripts
+├── ui/                # Streamlit interface
+├── tests/             # Test suite
+└── requirements/      # Dependency specifications
 ```
+
+## Technical Details
+
+### Model Architecture
+
+The project uses EfficientNetV2-S as the backbone, with the following modifications:
+
+```python
+class FoodClassifier(nn.Module):
+    def __init__(self, cfg):
+        super().__init__()
+        self.model = timm.create_model(
+            cfg['architecture'],
+            pretrained=cfg['pretrained'],
+            num_classes=cfg['num_classes']
+        )
+```
+
+### Data Pipeline
+
+- Custom PyTorch Dataset for Food-101
+- Robust data augmentation pipeline
+- Efficient data loading with pin memory
+- DVC integration for versioning
+
+### Training Pipeline
+
+- Mixed precision training
+- MLflow experiment tracking
+- Hydra configuration management
+- Gradient accumulation support
+- Learning rate scheduling
+
+### Web Interface
+
+- Real-time prediction visualization
+- Grad-CAM heatmap generation
+- Training progress monitoring
+- Experiment comparison
 
 ## Development
 
-### Environment Setup
+### Contributing
+
+1. Create a new branch: `git checkout -b feature/name`
+2. Update configuration in `configs/`
+3. Implement feature in `src/`
+4. Add tests in `tests/`
+5. Submit PR with description
+
+### Testing
 
 ```bash
-# DVC configuration
-dvc init
-dvc remote add -d storage s3://bucket/path
+# Run test suite
+pytest tests/
 
-# Configure DVC
-# .dvcignore
-artifacts/          # Ignore temporary outputs
-*.pyc              # Ignore Python cache
-__pycache__/       # Ignore Python cache directories
-.ipynb_checkpoints # Ignore Jupyter checkpoints
-
-# .dvc/config
-[core]
-    remote = storage
-    autostage = true
-[cache]
-    type = "hardlink,symlink"
-    dir = .dvc/cache
+# Check code style
+black src/ tests/
+mypy src/
 ```
 
-### Dependencies
+## Resources
 
-```toml
-# pyproject.toml
-[tool.poetry.dependencies]
-python = "^3.11"
-torch = "^2.3.0"
-opencv-python = "^5.0.0"
-
-[tool.poetry.group.ui.dependencies]
-streamlit = "^1.32.0"
-gradio = "^4.19.0"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.0.0"
-black = "^23.0.0"
-```
-
-### Training
-
-```python
-# scripts/train.py
-from src.models import Model
-from src.data import DataLoader
-
-def train():
-    model = Model(config)
-    trainer = Trainer(model)
-    trainer.train()
-
-if __name__ == "__main__":
-    train()
-```
-
-### Experiment Tracking
-
-```python
-# experiments/runs/baseline/run.py
-with mlflow.start_run():
-    mlflow.log_params(config)
-    train()
-    mlflow.log_metrics(metrics)
-```
-
-## Results
-
-### Performance
-
-| Model    | Accuracy | FPS | Memory |
-| -------- | -------- | --- | ------ |
-| Baseline | 85.5%    | 120 | 2.4 GB |
-| Improved | 89.2%    | 95  | 3.8 GB |
-
-## Contributing
-
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for development guidelines.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- List key contributors
-- Cite papers/repos
-- Credit data sources
+- [Food-101 Dataset Paper](https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/)
+- [EfficientNetV2 Paper](https://arxiv.org/abs/2104.00298)
+- [MLflow Documentation](https://www.mlflow.org/docs/latest/index.html)
+- [DVC Documentation](https://dvc.org/doc)
 
 ---
 
-Made with 🧠 by Generated via GitHub Actions
+📝 **Note**: This documentation should be updated as the project evolves.
+If you notice any inconsistencies or have suggestions for improvements,
+please open an issue or submit a pull request.
