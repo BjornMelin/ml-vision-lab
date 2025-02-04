@@ -54,6 +54,7 @@ flowchart LR
 - [Environment Setup](getting-started/environment.md)
 - [Basic Configuration](getting-started/configuration.md)
 - [First Steps](getting-started/first-steps.md)
+- [Creating New Projects](getting-started/create-project.md)
 
 ![Setup Process](images/setup_process.png)
 
