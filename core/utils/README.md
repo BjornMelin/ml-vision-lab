@@ -1,240 +1,192 @@
-# Utility Components 🛠️
+# Core Utilities 🛠️
 
-> Common utilities and helper functions for ML vision tasks
+> Common utility functions and tools for ML vision projects
 
 ## 📑 Table of Contents
 
 - [Overview](#overview)
 - [Directory Structure](#directory-structure)
-- [Components](#components)
-- [Usage Guidelines](#usage-guidelines)
+- [Utilities](#utilities)
+- [Usage Examples](#usage-examples)
 - [Best Practices](#best-practices)
 
 ## Overview
 
-This directory contains shared utilities and helper functions used across different vision projects, providing common functionality for metrics, visualization, logging, and optimization.
+The utils/ module provides essential utility functions and tools used across the ML vision projects. These utilities handle common tasks like metric calculation, visualization, logging, and optimization.
 
 ## Directory Structure
 
+```mermaid
+graph LR
+    A[utils/] --> B[metrics.py]
+    A --> C[visualization.py]
+    A --> D[logging.py]
+    A --> E[optimization.py]
+```
+
 ```
 utils/
-├── metrics/           # Evaluation metrics
-│   ├── classification.py # Classification metrics
-│   ├── detection.py     # Detection metrics
-│   └── segmentation.py  # Segmentation metrics
-├── visualization/     # Result visualization
-│   ├── plotting.py     # Plot generation
-│   ├── images.py       # Image visualization
-│   └── tensorboard.py  # TensorBoard logging
-├── logging/          # Experiment logging
-│   ├── logger.py      # Base logger
-│   ├── mlflow.py      # MLflow integration
-│   └── wandb.py       # Weights & Biases
-└── optimization/     # Performance tools
-    ├── profiler.py    # Code profiling
-    ├── memory.py      # Memory optimization
-    └── cuda.py        # GPU utilities
+├── metrics.py        # Evaluation metrics and calculations
+├── visualization.py  # Plotting and visualization tools
+├── logging.py       # Logging and experiment tracking
+└── optimization.py  # Performance optimization utilities
 ```
 
-## Components
+## Utilities
 
-### Metrics
+### metrics.py
+
+Core metrics implementation for model evaluation:
 
 ```python
 from core.utils.metrics import (
     calculate_accuracy,
     calculate_precision_recall,
-    calculate_map
+    calculate_f1_score,
+    calculate_confusion_matrix
 )
 
-# Classification metrics
+# Calculate metrics
 accuracy = calculate_accuracy(predictions, targets)
 precision, recall = calculate_precision_recall(predictions, targets)
-
-# Detection metrics
-map_score = calculate_map(
-    predictions,
-    targets,
-    iou_threshold=0.5
-)
+f1 = calculate_f1_score(precision, recall)
+conf_matrix = calculate_confusion_matrix(predictions, targets)
 ```
 
-### Visualization
+### visualization.py
+
+Tools for visualizing results and model outputs:
 
 ```python
 from core.utils.visualization import (
-    plot_results,
-    visualize_predictions,
-    log_to_tensorboard
+    plot_training_curves,
+    plot_confusion_matrix,
+    plot_predictions,
+    save_visualization
 )
 
-# Plot results
-plot_results(
-    metrics_dict,
-    save_path="results/plot.png"
-)
-
-# Visualize predictions
-visualize_predictions(
-    images,
-    predictions,
-    targets,
-    save_dir="results/viz"
-)
+# Create visualizations
+plot_training_curves(metrics_history)
+plot_confusion_matrix(conf_matrix)
+plot_predictions(images, predictions)
+save_visualization("results/", "training_curves.png")
 ```
 
-### Logging
+### logging.py
+
+Logging utilities for experiment tracking:
 
 ```python
-from core.utils.logging import setup_logging, MLflowLogger
+from core.utils.logging import (
+    setup_logger,
+    log_metrics,
+    log_experiment,
+    save_config
+)
 
 # Setup logging
-logger = setup_logging(
-    name=__name__,
-    log_file="logs/training.log"
-)
-
-# MLflow logging
-mlflow_logger = MLflowLogger(
-    experiment_name="vision_experiment",
-    tracking_uri="mlruns"
-)
-mlflow_logger.log_params(config)
-mlflow_logger.log_metrics(metrics)
+logger = setup_logger(__name__)
+log_metrics({"accuracy": 0.95, "loss": 0.1})
+log_experiment(experiment_name="training_run_1")
+save_config(config, "configs/experiment.yaml")
 ```
 
-## Usage Guidelines
+### optimization.py
 
-### 1. Metrics Tracking
-
-```python
-from core.utils.metrics import MetricsTracker
-
-# Initialize tracker
-tracker = MetricsTracker(
-    metrics=['accuracy', 'loss'],
-    save_dir='logs'
-)
-
-# Update metrics
-tracker.update({
-    'accuracy': 0.85,
-    'loss': 0.32
-})
-
-# Get summary
-summary = tracker.get_summary()
-```
-
-### 2. Visualization
-
-```python
-from core.utils.visualization import (
-    plot_learning_curves,
-    create_confusion_matrix
-)
-
-# Plot learning curves
-plot_learning_curves(
-    train_metrics,
-    val_metrics,
-    save_path='plots/learning_curves.png'
-)
-
-# Create confusion matrix
-create_confusion_matrix(
-    predictions,
-    targets,
-    save_path='plots/confusion_matrix.png'
-)
-```
-
-### 3. Optimization
+Performance optimization tools:
 
 ```python
 from core.utils.optimization import (
-    profile_model,
-    optimize_memory_usage
+    enable_mixed_precision,
+    optimize_memory_usage,
+    profile_performance,
+    benchmark_model
 )
 
-# Profile model
-profile_results = profile_model(
-    model,
-    input_shape=(1, 3, 224, 224)
-)
+# Optimize performance
+enable_mixed_precision()
+optimize_memory_usage(model)
+profile_performance(model, sample_input)
+benchmark_results = benchmark_model(model, dataloader)
+```
 
-# Optimize memory
-optimize_memory_usage(
-    model,
-    batch_size=32
-)
+## Usage Examples
+
+### Comprehensive Evaluation
+
+```python
+from core.utils.metrics import calculate_metrics
+from core.utils.visualization import plot_results
+from core.utils.logging import log_results
+
+def evaluate_model(model, test_loader):
+    # Calculate metrics
+    metrics = calculate_metrics(model, test_loader)
+
+    # Visualize results
+    plots = plot_results(metrics)
+
+    # Log everything
+    log_results(metrics, plots)
+
+    return metrics
+```
+
+### Performance Monitoring
+
+```mermaid
+graph TD
+    A[Model Training] --> B[Log Metrics]
+    B --> C[Visualize Results]
+    C --> D[Save Reports]
+
+    B --> E[Track Memory]
+    B --> F[Monitor GPU]
+    B --> G[Profile Time]
 ```
 
 ## Best Practices
 
-### 1. Logging
+### 1. Metrics
 
-- Use structured logging
-- Include timestamps
-- Set appropriate levels
-- Handle exceptions
-- Rotate log files
+- Use appropriate metrics for tasks
+- Implement error handling
+- Support batch processing
+- Enable custom metrics
+- Validate calculations
 
 ### 2. Visualization
 
+- Create clear, labeled plots
 - Use consistent styling
-- Add proper labels
-- Include legends
-- Save high quality
-- Enable interactivity
+- Support various formats
+- Enable interactive plots
+- Save high-quality outputs
 
-### 3. Metrics
+### 3. Logging
 
-- Validate inputs
-- Handle edge cases
-- Use appropriate metrics
-- Track uncertainties
-- Save raw data
+- Structure log messages
+- Include timestamps
+- Handle different log levels
+- Support multiple outputs
+- Enable/disable as needed
 
 ### 4. Optimization
 
 - Profile before optimizing
-- Monitor memory usage
-- Track GPU utilization
-- Benchmark changes
+- Monitor resource usage
+- Benchmark improvements
 - Document optimizations
+- Consider trade-offs
 
-## Integration
+Remember: Good utilities improve development efficiency and code quality! 💪
 
-### With Core Components
+### Additional Resources
 
-```python
-from core.models import BaseModel
-from core.utils.optimization import optimize_model
-from core.utils.logging import log_model_summary
+- [Metrics Documentation](docs/metrics.md)
+- [Visualization Guide](docs/visualization.md)
+- [Logging Best Practices](docs/logging.md)
+- [Optimization Tips](docs/optimization.md)
 
-class OptimizedModel(BaseModel):
-    def __init__(self, config):
-        super().__init__(config)
-        self.model = optimize_model(self.model)
-        log_model_summary(self.model)
-```
-
-### With Projects
-
-```python
-from core.utils import setup_project
-
-# Setup project
-logger, metrics, viz = setup_project(
-    name="vision_project",
-    config=config
-)
-
-# Use utilities
-logger.info("Starting training...")
-metrics.update(train_metrics)
-viz.plot_results(results)
-```
-
-Remember: Good utilities make development faster and more reliable! 💪
+![Utility Functions Overview](docs/images/utils_overview.png)
+_Placeholder: Insert diagram showing the relationship between utility functions_
