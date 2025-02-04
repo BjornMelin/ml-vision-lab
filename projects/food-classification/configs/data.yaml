@@ -1,3 +1,24 @@
-root: data
-batch_size: 32
-num_workers: 4
+dataset:
+  name: food101
+  root: data/raw/food-101
+  train_split: train
+  val_split: test
+
+transforms:
+  train:
+    - RandomResizedCrop: { size: 224 }
+    - RandomHorizontalFlip: {}
+    - ColorJitter: { brightness: 0.4, contrast: 0.4, saturation: 0.4 }
+    - ToTensor: {}
+    - Normalize: { mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225] }
+  test:
+    - Resize: { size: [256, 256] }
+    - CenterCrop: { size: 224 }
+    - ToTensor: {}
+    - Normalize: { mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225] }
+
+dataloader:
+  batch_size: 32
+  num_workers: 4
+  pin_memory: true
+  drop_last: true

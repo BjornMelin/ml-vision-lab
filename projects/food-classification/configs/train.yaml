@@ -1,11 +1,32 @@
-model:
-  num_classes: 10
+defaults:
+  - model: model
+  - data: data
+  - _self_
 
-data:
-  root: data
-  batch_size: 32
-  num_workers: 4
+training:
+  epochs: 20
+  val_interval: 1
+  save_interval: 5
+  mixed_precision: true
+  seed: 42
 
-train:
-  epochs: 100
-  lr: 0.001
+mlflow:
+  experiment_name: food-classification
+  run_name: ${now:%Y-%m-%d_%H-%M-%S}
+  tracking_uri: file://./experiments/runs
+
+checkpoints:
+  dirpath: experiments/models
+  filename: "epoch_{epoch:02d}-val_acc_{val/accuracy:.4f}"
+  save_top_k: 3
+  monitor: "val/accuracy"
+  mode: "max"
+
+hydra:
+  run:
+    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: multirun/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.num}
+  job:
+    chdir: true

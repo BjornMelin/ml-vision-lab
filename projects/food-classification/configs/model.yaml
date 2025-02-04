@@ -1,1 +1,21 @@
-num_classes: 10
+architecture: tf_efficientnetv2_s
+pretrained: true
+num_classes: 101
+freeze_backbone: false
+
+optimizer:
+  name: AdamW
+  lr: 0.001
+  weight_decay: 0.01
+  
+scheduler:
+  name: CosineAnnealingLR
+  T_max: ${training.epochs}
+  eta_min: 1e-6
+
+grad_clip:
+  max_norm: 5.0
+
+metrics:
+  top_k: 5
+  log_interval: 10
