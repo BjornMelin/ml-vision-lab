@@ -1,0 +1,8 @@
+architecture: tf_efficientnetv2_s
+pretrained: true
+num_classes: 101  # Food-101 dataset
+freeze_backbone: false
+optimizer:
+  name: AdamW
+  lr: 0.001
+  weight_decay: 0.01

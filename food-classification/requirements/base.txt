@@ -1,0 +1,12 @@
+# Core ML
+torch==2.1.0
+torchvision==0.16.0
+timm==0.9.12
+opencv-python-headless==4.8.1.78
+numpy==1.26.4
+scipy==1.11.4
+pandas==2.1.4
+
+# Experiment tracking
+mlflow==2.11.3
+dvc==3.36.1
