@@ -1,0 +1,9 @@
+train:
+  epochs: 50
+  learning_rate: 0.001
+  batch_size: 32
+  num_workers: 4
+  device: "cuda"  # Use "cpu" if no GPU is available
+  log_interval: 10
+  save_model: true
+  save_path: "experiments/models/best_model.pth"

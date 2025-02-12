@@ -1,0 +1,13 @@
+data:
+  train_dir: "data/food/train"
+  val_dir: "data/food/val"
+  test_dir: "data/food/test"
+  input_size: 224
+  batch_size: 32
+  num_workers: 4
+
+augmentation:
+  random_resized_crop: True
+  random_horizontal_flip: True
+  color_jitter: True
+  normalize: True
